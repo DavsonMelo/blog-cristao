@@ -1,37 +1,43 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, orderBy, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where, getDocs, Timestamp, QueryConstraint } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import PostCard from '@/app/components/post_card';
 import type { PostWithUser, Post, User } from '@/types';
 import styles from './styles.module.scss';
 
-export default function PostList() {
+interface PostListProps {
+  authorUID?: string;
+}
+
+export default function PostList({ authorUID }: PostListProps = {}) {
   const [posts, setPosts] = useState<PostWithUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Criar uma query para posts, ordenados por createdAt (mais recentes primeiro)
-    const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+    // Criar array de constraints com tipo correto
+    const constraints: QueryConstraint[] = [];
+    if (authorUID) {
+      constraints.push(where('authorUID', '==', authorUID));
+    }
+    constraints.push(orderBy('createdAt', 'desc'));
 
-    // Configurar listener em tempo real para a coleção 'posts'
+    // Criar query com constraints
+    const postsQuery = query(collection(db, 'posts'), ...constraints);
+
+    // Configurar listener em tempo real
     const unsubscribe = onSnapshot(postsQuery, async (snapshot) => {
       setLoading(true);
-
-      // Mapear os documentos para o formato Post
       const postsData = snapshot.docs.map((doc) => {
         const post = doc.data() as Post;
-
-        // Converter createdAt (Timestamp ou FieldValue) para Date
         let convertedDate: Date;
         if (post.createdAt instanceof Timestamp) {
           convertedDate = post.createdAt.toDate();
         } else {
-          // Fallback para FieldValue ou casos inesperados
+          console.warn(`createdAt inválido no post ${doc.id}:`, post.createdAt);
           convertedDate = new Date();
         }
-
         return {
           id: doc.id,
           ...post,
@@ -45,19 +51,15 @@ export default function PostList() {
         return;
       }
 
-      // Obter UIDs únicos dos autores
-      const authorUIDs = Array.from(new Set(postsData.map((p) => p.authorUID)));
-
       // Buscar usuários correspondentes
+      const authorUIDs = Array.from(new Set(postsData.map((p) => p.authorUID)));
       const usersQuery = query(collection(db, 'users'), where('uid', 'in', authorUIDs));
       const usersSnap = await getDocs(usersQuery);
-
       const usersMap: { [uid: string]: User } = {};
       usersSnap.docs.forEach((doc) => {
         usersMap[doc.id] = doc.data() as User;
       });
 
-      // Combinar posts com informações dos usuários
       const postsWithUser: PostWithUser[] = postsData.map((post) => ({
         ...post,
         user: usersMap[post.authorUID] || undefined,
@@ -66,16 +68,19 @@ export default function PostList() {
       setPosts(postsWithUser);
       setLoading(false);
     }, (error) => {
-      console.error('Erro ao ouvir posts:', error);
+      console.error('Erro ao buscar posts:', error);
       setLoading(false);
     });
 
-    // Limpar o listener quando o componente desmontar
     return () => unsubscribe();
-  }, []);
+  }, [authorUID]);
 
   if (loading) return <p className={styles.loading}>Carregando posts...</p>;
-  if (!posts.length) return <p className={styles.empty}>Nenhum post encontrado</p>;
+  if (!posts.length) return (
+    <p className={styles.empty}>
+      {authorUID ? 'Nenhum post encontrado para este autor' : 'Nenhum post encontrado'}
+    </p>
+  );
 
   return (
     <section className={styles.grid}>

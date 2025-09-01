@@ -1,47 +1,43 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from './styles.module.scss';
-import { auth, db } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { addDoc, collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuthRedirect } from '@/hooks/useAuthRedirect';
-import { Heart, MessageSquare, Share2 } from 'lucide-react';
 import { useDraftPost } from '@/app/context/DraftPostContext';
 import { Post, User } from '@/types';
-
-interface DraftPost {
-  title: string;
-  content: string;
-  imageFile?: File;
-  previewUrl?: string;
-}
+import styles from './styles.module.scss';
 
 export default function PreviewPage() {
   const router = useRouter();
   const user = useAuthRedirect();
-  const [loading, setLoading] = useState(false);
   const { draft, setDraft } = useDraftPost();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const previewExcerpt = draft?.content
-    ? draft.content.length > 200
-      ? draft.content.slice(0, 200) + '...'
-      : draft.content
-    : '';
+  // Limpar mensagem de erro após 3 segundos
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   if (!draft || !user) return null;
 
   const handlePublish = async () => {
-    if (!draft || !draft.imageFile) return;
-    setLoading(true);
+    if (!draft.title || !draft.content || !draft.imageFile) {
+      setError('Título, conteúdo e imagem são obrigatórios!');
+      return;
+    }
 
+    setLoading(true);
     try {
-      // 1. Verificar se o usuário já tem um documento na coleção 'users'
+      // Criar documento do usuário, se necessário
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
-
       if (!userSnap.exists()) {
-        // Criar documento do usuário se não existir
         const userData: User = {
           uid: user.uid,
           name: user.displayName || 'Usuário Anônimo',
@@ -51,47 +47,37 @@ export default function PreviewPage() {
         await setDoc(userRef, userData);
       }
 
-      // 2. Fazer upload da imagem para o Cloudinary
+      // Fazer upload da imagem para o Cloudinary
       const formData = new FormData();
       formData.append('file', draft.imageFile);
-      formData.append(
-        'upload_preset',
-        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
-      );
-
+      formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
+        { method: 'POST', body: formData }
       );
       const data = await res.json();
-      const featuredImageUrl = data.secure_url;
+      if (!data.secure_url) {
+        throw new Error('Falha no upload da imagem');
+      }
 
-      // 3. Criar o post
-      const excerpt =
-        draft.content.length > 200
-          ? draft.content.slice(0, 200) + '...'
-          : draft.content;
-
+      // Criar o post no Firestore
+      const excerpt = draft.content.length > 200 ? draft.content.slice(0, 200) + '...' : draft.content;
       const newPost: Partial<Post> = {
         title: draft.title,
         content: draft.content,
         excerpt,
-        featuredImageUrl,
+        featuredImageUrl: data.secure_url,
         authorUID: user.uid,
         createdAt: serverTimestamp(),
         likesCount: 0,
         commentsCount: 0,
       };
-
       await addDoc(collection(db, 'posts'), newPost);
+
       setDraft(null);
       router.push('/');
     } catch (err: any) {
-      console.error(err);
-      alert('Erro ao publicar post: ' + err.message);
+      setError('Erro ao publicar post: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -107,7 +93,6 @@ export default function PreviewPage() {
         />
         <span className={styles.name}>{user.displayName}</span>
       </div>
-
       <h1 className={styles.title}>{draft.title}</h1>
       {draft.previewUrl && (
         <div className={styles.imageWrapper}>
@@ -120,18 +105,14 @@ export default function PreviewPage() {
           />
         </div>
       )}
-      <p className={styles.content}>{previewExcerpt}</p>
-
-      <div className={styles.interations}>
-        <Heart size={18} />
-        <MessageSquare size={18} />
-        <Share2 size={18} />
-      </div>
-
+      <p className={styles.content}>
+        {draft.content.length > 200 ? draft.content.slice(0, 200) + '...' : draft.content}
+      </p>
       <div className={styles.actions}>
         <button
           className={styles.editButton}
           onClick={() => router.push('/posts/create')}
+          disabled={loading}
         >
           Voltar
         </button>
@@ -143,6 +124,7 @@ export default function PreviewPage() {
           {loading ? 'Publicando...' : 'Publicar'}
         </button>
       </div>
+      {error && <p className={styles.error}>{error}</p>}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from "next/navigation";
 import styles from './styles.module.scss';
 import type { PostWithUser } from '@/types';
 import { Heart, MessageSquare, Share2 } from 'lucide-react';
@@ -9,21 +10,29 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post }: PostCardProps) {
-  // Garantimos que a data e o resumo existam
+  const router = useRouter();  // Garantimos que a data e o resumo existam
   const excerpt = post.excerpt; 
   // Usa o nome e a URL de perfil do usuário, com um fallback
   const authorName = post.user?.name || 'Autor Desconhecido';
   const authorImage = post.user?.profileImageUrl || '/default-avatar.jpg';
 
+  const handleAuthorClick = () => {
+    if(post.authorUID) {
+      router.push(`/posts/author/${post.authorUID}`);
+    }
+  };
+
+
   return (
     <div className={styles.card}>
-      <div className={styles.author}>
+      <div className={styles.author} onClick={handleAuthorClick}>
         <img
           src={authorImage}
           alt={authorName}
           className={styles.avatar}
+          style={{ cursor: 'pointer' }}
         />
-        <span className={styles.name}>{authorName}</span>
+        <span className={styles.name} style={{ cursor: 'pointer' }}>{authorName}</span>
       </div>
 
       <h2 className={styles.title}>{post.title}</h2>

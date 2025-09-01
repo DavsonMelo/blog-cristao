@@ -55,7 +55,7 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        <div className={styles.logo}>DavsonDev</div>
+        <div className={styles.logo}>❤️ Blog Cristão ❤️</div>
         {/* dentro da nav class nav/+open -> HOME, SOBRE, CRIAR POST, SAIR */}
         <nav className={`${styles.nav} ${menuOpen ? styles.open : ''}`}>
           <a href="/" className={styles.link} onClick={() => setMenuOpen(false)}>Home</a>
