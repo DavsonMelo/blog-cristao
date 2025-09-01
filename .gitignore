@@ -16,6 +16,7 @@
 # next.js
 /.next/
 /out/
+/build/
 
 # production
 /build
@@ -23,6 +24,7 @@
 # misc
 .DS_Store
 *.pem
+*.txt
 
 # debug
 npm-debug.log*
@@ -35,7 +37,11 @@ yarn-error.log*
 
 # vercel
 .vercel
+*.log
+.DS_Store
+.vercel-cache
 
+# next-build-stats.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts

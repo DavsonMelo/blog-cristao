@@ -1,0 +1,32 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;        // Garante que a coluna não ultrapasse a largura do container
+  justify-items: center;             // centraliza os cards na coluna
+  gap: 16px;
+  padding: 16px;
+  width: 100%;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+
+  @media (min-width: 740px) {
+    grid-template-columns: repeat(2, 1fr);
+    justify-items: stretch;          // cards ocupam toda a coluna
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1200px;               // centraliza grid maior
+    margin: 0 auto;
+  }
+}
+.grid::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.info {
+  text-align: center;
+  color: var(--text-muted);
+  margin-top: 24px;
+}

@@ -1,0 +1,131 @@
+.previewPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%; // ocupa toda a tela
+  max-width: 400px;
+  margin: 32px auto; // igual ao header
+  padding: 10px; // opcional, dá espaço interno
+  box-sizing: border-box;
+
+  background: var(--bg-color); // gradiente suave
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(var(--text-color-rgb), 0.15); // sombra leve
+  border: 1px solid rgba(var(--text-color-rgb), 0.1);
+
+  transition: transform 0.3s ease, box-shadow 0.3s ease; // animação do card
+
+  &:hover {
+    transform: translateY(-5px) scale(1.02);       // leve elevação + zoom
+    box-shadow: 0 15px 30px rgba(var(--text-color-rgb), 0.25);  // sombra mais intensa
+  }
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 20px;
+  color: var(--text-color);
+}
+
+.imageWrapper {
+  width: 350px;
+  height: auto;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  overflow: hidden;
+
+  .image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+}
+
+.content {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-color);
+  margin-bottom: 24px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4; // limita a 4 linhas
+  line-clamp: 4; // propriedade padrão para compatibilidade
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 350px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+
+  .editButton,
+  .postButton {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+  }
+
+  .editButton {
+    background-color: #f3f3f3;
+    color: #111;
+
+    &:hover {
+      background-color: #e0e0e0;
+    }
+  }
+
+  .postButton {
+    background-color: #2563eb; // azul
+    color: #fff;
+
+    &:hover {
+      background-color: #1e40af;
+    }
+  }
+}
+.author {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  width: 100%;          // ocupa toda a largura do card
+  padding-left: 10px;   // opcional: dá uma respirada da borda
+  box-sizing: border-box;
+  color: var(--text-color);
+
+}
+.avatar {
+  width: 20px;
+  height: 20px;
+}
+.name {
+  font-size: 12px;
+  color: var(--text-color);
+}
+.interations {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  padding-inline: 30px;
+  margin-bottom: 30px;
+  justify-content: space-between;
+  color: var(--text-color);
+
+  svg {
+    stroke: var(--text-color);
+    transition: stroke 0.3s ease;
+
+    &:hover {
+      stroke: #2563eb; // destaque azul no hover
+    }
+  }
+}

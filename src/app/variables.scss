@@ -1,0 +1,16 @@
+:root {
+  /* Cores */
+  --bg-color: #fff;
+  --text-color: #000;
+  --text-color-rgb: 0, 0, 0;
+
+  /* fontes */
+  --font-heading: var(--font-poppins);
+  --font-body: var(--font-inter);
+}
+
+.dark {
+  --bg-color: #121212;
+  --text-color: #f5f5f5;
+  --text-color-rgb: 245, 245, 245;
+}

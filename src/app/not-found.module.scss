@@ -1,0 +1,36 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  text-align: center;
+
+  h1 {
+    font-size: 6rem;
+    color: #ff6b6b;
+  }
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  a {
+    text-decoration: none;
+    color: white;
+    background: #4caf50;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    transition: 0.3s;
+    
+    &:hover {
+      background: #45a049;
+    }
+  }
+}
