@@ -10,6 +10,7 @@ import ThemeToggleButton from '@/app/components/theme_button/index';
 import LoginButton from '@/app/components/login_button/index';
 import styles from './styles.module.scss';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from "next/link";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false); // Controla o menu hamburger
@@ -58,8 +59,8 @@ export default function Header() {
         <div className={styles.logo}>❤️ Blog Cristão ❤️</div>
         {/* dentro da nav class nav/+open -> HOME, SOBRE, CRIAR POST, SAIR */}
         <nav className={`${styles.nav} ${menuOpen ? styles.open : ''}`}>
-          <a href="/" className={styles.link} onClick={() => setMenuOpen(false)}>Home</a>
-          <a href="/about" className={styles.link}>Sobre</a>
+          <Link href="/" className={styles.link} onClick={() => setMenuOpen(false)}>Home</Link>
+          <Link href="/about" className={styles.link}>Sobre</Link>
 
           {user && (
             <div className={styles.userMenu}>

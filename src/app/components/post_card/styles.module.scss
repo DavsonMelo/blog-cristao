@@ -92,15 +92,14 @@
   svg {
     stroke: var(--text-color);
     transition: stroke 0.3s ease;
-
-    &:hover {
-      stroke: #2563eb;
-    }
   }
-
-  span {
-    display: flex;
-    align-items: center;
-    font-size: 12px;
+}
+.interations span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  &:hover {
+    color: red; // Efeito hover no coração
   }
 }

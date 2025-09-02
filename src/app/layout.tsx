@@ -5,6 +5,7 @@ import { DraftPostProvider } from './context/DraftPostContext';
 
 import './globals.scss';
 import Header from './components/header';
+import { ToastContainer } from "react-toastify";
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -50,7 +51,11 @@ export default function RootLayout({
         <ThemeProvider>
           <DraftPostProvider>
             <Header />
-            <main style={{ paddingTop: '60px' }}>{children}</main>
+            <main
+             style={{ paddingTop: '60px' }}>
+              {children}
+              <ToastContainer />
+              </main>
           </DraftPostProvider>
         </ThemeProvider>
       </body>
