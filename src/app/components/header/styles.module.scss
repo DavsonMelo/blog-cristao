@@ -18,9 +18,13 @@
 /* Logo */
 .logo {
   font-family: var(--font-heading), sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-color);
+
+  @media(min-width: 768px) {
+    font-size: 1.5rem;
+  }
 }
 /* Navegação */
 .nav {
@@ -122,8 +126,8 @@
 }
 .avatar {
   border-radius: 50%;
-  width: 35px;
-  height: 35px;
+  width: 25px;
+  height: 25px;
   object-fit: cover;
   border: 1px solid var(--text-color); // bordinha branca
 }
@@ -157,5 +161,9 @@
   }
   .userMenuContent {
     flex-direction: row;
+  }
+  .avatar {
+    width: 35px;
+    height: 35px;
   }
 }
