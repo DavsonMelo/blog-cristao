@@ -12,7 +12,7 @@ export interface Post {
   featuredImageUrl?: string; // URL da imagem em destaque (mais descritivo)
   likesCount: number; // Contador de likes (mais descritivo)
   commentsCount: number; // Contador de comentários (mais descritivo)
-  createdAt: Timestamp | FieldValue; // Tipo nativo do Firestore para datas
+  createdAt: string | null;
 }
 // types.ts
 export interface User {
@@ -20,18 +20,10 @@ export interface User {
   name: string; // Nome do autor, para exibir no post
   email: string;
   profileImageUrl?: string; // URL da foto de perfil (mais descritivo)
+  createdAt?: string | null; // Adicionado para corresponder aos dados do Firestore
 }
 // Post combinado com usuário (para consumo no front-end)
-export interface PostWithUser {
-  id: string;
-  authorUID: string;
-  title: string;
-  content: string;
-  excerpt: string;
-  featuredImageUrl?: string;
-  likesCount: number;
-  commentsCount: number;
-  createdAt: Date;
+export interface PostWithUser extends Post {
   user?: User;
 }
 export interface Comment {
@@ -39,7 +31,7 @@ export interface Comment {
   content: string;
   authorUID: string;
   authorName: string;
-  createdAt: any;
+  createdAt: string | null;
   likesCount: number;
   likedByUser: boolean; // Novo campo para indicar se o usuário curtiu
 }
