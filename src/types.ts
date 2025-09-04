@@ -34,3 +34,12 @@ export interface PostWithUser {
   createdAt: Date;
   user?: User;
 }
+export interface Comment {
+  id: string;
+  content: string;
+  authorUID: string;
+  authorName: string;
+  createdAt: any;
+  likesCount: number;
+  likedByUser: boolean; // Novo campo para indicar se o usuário curtiu
+}

@@ -85,7 +85,7 @@ export default function PostCard({ post }: PostCardProps) {
       <h2 className={styles.title}>{post.title}</h2>
 
       {post.featuredImageUrl && (
-        <div className={styles.imageWrapper}>
+        <div className={styles.imageWrapper} onClick={() => router.push(`/posts/${post.id}`)} style={{cursor: 'pointer'}}>
           <img
             src={post.featuredImageUrl}
             alt={post.title}
@@ -102,7 +102,8 @@ export default function PostCard({ post }: PostCardProps) {
           {likesCount}
         </span>
         <span>
-          <MessageSquare size={18} /> {post.commentsCount || 0}
+          <MessageSquare size={18} onClick={() => router.push(`/posts/${post.id}`)} style={{cursor: 'pointer'}} /> {post.commentsCount || 0}
+          
         </span>
         <span>
           <Share2 size={18} />
