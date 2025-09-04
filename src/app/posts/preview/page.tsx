@@ -62,7 +62,8 @@ export default function PreviewPage() {
 
       // Criar o post no Firestore
       const excerpt = draft.content.length > 200 ? draft.content.slice(0, 200) + '...' : draft.content;
-      const newPost: Partial<Post> = {
+
+      const newPost: Omit<Post, 'createdAt'> & { createdAt?: any } = {
         title: draft.title,
         content: draft.content,
         excerpt,

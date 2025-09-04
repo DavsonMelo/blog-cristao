@@ -1,12 +1,23 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { collection, onSnapshot, query, orderBy, where, getDocs, Timestamp, QueryConstraint, DocumentSnapshot } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import {
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+  where,
+  getDocs,
+  Timestamp,
+  QueryConstraint,
+  DocumentSnapshot,
+  limit,
+  startAfter,
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import PostCard from '@/app/components/post_card';
 import type { PostWithUser, Post, User } from '@/types';
 import styles from './styles.module.scss';
-import { limit, startAfter } from 'firebase/firestore';
 
 interface PostListProps {
   authorUID?: string;
@@ -18,66 +29,71 @@ export default function PostList({ authorUID }: PostListProps = {}) {
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
 
-  const PAGE_SIZE = 10; // Número de posts por página
+  const PAGE_SIZE = 10;
+
+  const convertCreatedAt = (createdAt: any): string => {
+    if (createdAt && typeof createdAt === 'object' && 'toDate' in createdAt) {
+      return (createdAt as Timestamp).toDate().toISOString();
+    } else if (typeof createdAt === 'string') {
+      return createdAt;
+    } else {
+      console.warn('createdAt inválido:', createdAt);
+      return new Date().toISOString();
+    }
+  };
 
   useEffect(() => {
     const constraints: QueryConstraint[] = [];
-    if (authorUID) {
-      constraints.push(where('authorUID', '==', authorUID));
-    }
+    if (authorUID) constraints.push(where('authorUID', '==', authorUID));
     constraints.push(orderBy('createdAt', 'desc'));
     constraints.push(limit(PAGE_SIZE));
 
     const postsQuery = query(collection(db, 'posts'), ...constraints);
 
-    const unsubscribe = onSnapshot(postsQuery, async (snapshot) => {
-      setLoading(true);
-      const postsData = snapshot.docs.map((doc) => {
-        const post = doc.data() as Post;
-        let convertedDate: Date;
-        if (post.createdAt instanceof Timestamp) {
-          convertedDate = post.createdAt.toDate();
-        } else {
-          console.warn(`createdAt inválido no post ${doc.id}:`, post.createdAt);
-          convertedDate = new Date();
+    const unsubscribe = onSnapshot(
+      postsQuery,
+      async (snapshot) => {
+        setLoading(true);
+
+        const postsData = snapshot.docs.map((doc) => {
+          const post = doc.data() as Post;
+          return {
+            id: doc.id,
+            ...post,
+            createdAt: convertCreatedAt(post.createdAt),
+          };
+        });
+
+        if (postsData.length < PAGE_SIZE) setHasMore(false);
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
+
+        if (postsData.length === 0) {
+          setPosts([]);
+          setLoading(false);
+          return;
         }
-        return {
-          id: doc.id,
+
+        const authorUIDs = Array.from(new Set(postsData.map((p) => p.authorUID)));
+        const usersQuery = query(collection(db, 'users'), where('uid', 'in', authorUIDs));
+        const usersSnap = await getDocs(usersQuery);
+        const usersMap: { [uid: string]: User } = {};
+        usersSnap.docs.forEach((doc) => {
+          usersMap[doc.id] = doc.data() as User;
+        });
+
+        const postsWithUser: PostWithUser[] = postsData.map((post) => ({
           ...post,
-          createdAt: convertedDate,
-        };
-      });
+          user: usersMap[post.authorUID] || undefined,
+        }));
 
-      if (postsData.length < PAGE_SIZE) {
-        setHasMore(false);
-      }
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
-
-      if (postsData.length === 0) {
-        setPosts([]);
+        setPosts(postsWithUser);
         setLoading(false);
-        return;
+      },
+      (error) => {
+        console.error('Erro ao buscar posts:', error);
+        setLoading(false);
       }
-
-      const authorUIDs = Array.from(new Set(postsData.map((p) => p.authorUID)));
-      const usersQuery = query(collection(db, 'users'), where('uid', 'in', authorUIDs));
-      const usersSnap = await getDocs(usersQuery);
-      const usersMap: { [uid: string]: User } = {};
-      usersSnap.docs.forEach((doc) => {
-        usersMap[doc.id] = doc.data() as User;
-      });
-
-      const postsWithUser: PostWithUser[] = postsData.map((post) => ({
-        ...post,
-        user: usersMap[post.authorUID] || undefined,
-      }));
-
-      setPosts(postsWithUser);
-      setLoading(false);
-    }, (error) => {
-      console.error('Erro ao buscar posts:', error);
-      setLoading(false);
-    });
+    );
 
     return () => unsubscribe();
   }, [authorUID]);
@@ -87,13 +103,9 @@ export default function PostList({ authorUID }: PostListProps = {}) {
 
     setLoading(true);
     const constraints: QueryConstraint[] = [];
-    if (authorUID) {
-      constraints.push(where('authorUID', '==', authorUID));
-    }
+    if (authorUID) constraints.push(where('authorUID', '==', authorUID));
     constraints.push(orderBy('createdAt', 'desc'));
-    if (lastDoc) {
-      constraints.push(startAfter(lastDoc));
-    }
+    if (lastDoc) constraints.push(startAfter(lastDoc));
     constraints.push(limit(PAGE_SIZE));
 
     const postsQuery = query(collection(db, 'posts'), ...constraints);
@@ -101,23 +113,14 @@ export default function PostList({ authorUID }: PostListProps = {}) {
 
     const newPostsData = snapshot.docs.map((doc) => {
       const post = doc.data() as Post;
-      let convertedDate: Date;
-      if (post.createdAt instanceof Timestamp) {
-        convertedDate = post.createdAt.toDate();
-      } else {
-        console.warn(`createdAt inválido no post ${doc.id}:`, post.createdAt);
-        convertedDate = new Date();
-      }
       return {
         id: doc.id,
         ...post,
-        createdAt: convertedDate,
+        createdAt: convertCreatedAt(post.createdAt),
       };
     });
 
-    if (newPostsData.length < PAGE_SIZE) {
-      setHasMore(false);
-    }
+    if (newPostsData.length < PAGE_SIZE) setHasMore(false);
     setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
 
     if (newPostsData.length === 0) {
@@ -138,16 +141,17 @@ export default function PostList({ authorUID }: PostListProps = {}) {
       user: usersMap[post.authorUID] || undefined,
     }));
 
-    setPosts((prevPosts) => [...prevPosts, ...newPostsWithUser]);
+    setPosts((prev) => [...prev, ...newPostsWithUser]);
     setLoading(false);
   };
 
   if (loading && posts.length === 0) return <p className={styles.loading}>Carregando posts...</p>;
-  if (!posts.length) return (
-    <p className={styles.empty}>
-      {authorUID ? 'Nenhum post encontrado para este autor' : 'Nenhum post encontrado'}
-    </p>
-  );
+  if (!posts.length)
+    return (
+      <p className={styles.empty}>
+        {authorUID ? 'Nenhum post encontrado para este autor' : 'Nenhum post encontrado'}
+      </p>
+    );
 
   return (
     <section className={styles.grid}>
