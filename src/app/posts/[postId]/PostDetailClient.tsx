@@ -267,6 +267,12 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
 
   return (
     <div className={styles.sectionView}>
+      <h2
+        className={styles.callAction}
+        onClick={() => router.push('/')}
+        >
+        Leia mais posts inspiradores<br />clicando aqui
+      </h2>
       <div className={styles.postView}>
         <div
           className={styles.author}
@@ -325,19 +331,21 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
             />
             <Send
               className={styles.sendIcon}
-              size={18}
+              size={25}
               onClick={handleCommentSubmit}
             />
           </div>
           <div className={styles.commentList}>
             {comments.map((comment) => (
               <div key={comment.id} className={styles.comment}>
-                <span className={styles.commentAuthor}>{comment.authorName}</span>
-                {comment.createdAt && (
-                  <span className={styles.commentDate}>
-                    {format(new Date(comment.createdAt), 'd MMM yyyy, HH:mm', { locale: ptBR })}
-                  </span>
-                )}
+                <div className={styles.commentHeader}>
+                  <span className={styles.commentAuthor}>{comment.authorName}</span>
+                  {comment.createdAt && (
+                    <span className={styles.commentDate}>
+                      {format(new Date(comment.createdAt), 'd MMM yyyy, HH:mm', { locale: ptBR })}
+                    </span>
+                  )}
+                </div>
                 <p className={styles.commentContent}>{comment.content}</p>
                 <span
                   onClick={() => handleCommentLike(comment.id, comment.likedByUser)}

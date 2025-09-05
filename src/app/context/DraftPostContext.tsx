@@ -7,6 +7,8 @@ interface DraftPost {
   content: string;
   imageFile?: File;
   previewUrl?: string;
+  authorUID?: string; // Adicione como opcional
+  authorEmail?: string; // Adicione como opcional
 }
 
 interface DraftPostContextType {
@@ -14,7 +16,9 @@ interface DraftPostContextType {
   setDraft: (draft: DraftPost | null) => void;
 }
 
-const DraftPostContext = createContext<DraftPostContextType | undefined>(undefined);
+const DraftPostContext = createContext<DraftPostContextType | undefined>(
+  undefined
+);
 
 export const DraftPostProvider = ({ children }: { children: ReactNode }) => {
   const [draft, setDraft] = useState<DraftPost | null>(null);
@@ -28,6 +32,7 @@ export const DraftPostProvider = ({ children }: { children: ReactNode }) => {
 
 export const useDraftPost = () => {
   const context = useContext(DraftPostContext);
-  if (!context) throw new Error('useDraftPost must be used within a DraftPostProvider');
+  if (!context)
+    throw new Error('useDraftPost must be used within a DraftPostProvider');
   return context;
 };

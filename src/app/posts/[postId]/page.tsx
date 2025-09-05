@@ -1,7 +1,6 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Post, PostWithUser, User } from '@/types';
-import type { Metadata, ResolvingMetadata } from 'next';
 import PostDetailClient from './PostDetailClient';
 import { Timestamp } from 'firebase/firestore';
 
@@ -61,53 +60,13 @@ async function getPostData(postId: string): Promise<PostWithUser | null> {
 }
 
 type PostPageProps = {
-  params: {
+  params: Promise<{
     postId: string;
-  };
+  }>
 };
 
-// Definir metadados OG dinâmicos
-export async function generateMetadata(
-  { params }: any): Promise<Metadata> {
-  const postData = await getPostData(params.postId);
-
-  if (!postData) {
-    return {
-      title: 'Post não encontrado',
-      description: 'Este post não está disponível.',
-    };
-  }
-
-  return {
-    title: postData.title || 'Post sem título',
-    description:
-      postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
-    openGraph: {
-      title: postData.title || 'Post sem título',
-      description:
-        postData.excerpt || 'Leia mais sobre este post no Blogfolio!',
-      url: `${
-        process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3000'
-      }/posts/${params.postId}`,
-      images: postData.featuredImageUrl
-        ? [
-            {
-              url: postData.featuredImageUrl,
-              width: 800,
-              height: 400,
-              type: 'image/jpeg',
-            },
-          ]
-        : undefined,
-      type: 'article',
-      locale: 'pt_BR',
-      siteName: 'Blog Cristão',
-    },
-  };
-}
-
-export default async function PostDetailPage({ params }: any) {
-  const { postId } = params;
+export default async function PostDetailPage({ params }: PostPageProps) {
+  const { postId } = await params;
   const postData = await getPostData(postId);
 
   if (!postData) return <p>Post não encontrado</p>;

@@ -61,4 +61,24 @@
     transform: translateY(0);
   }
 }
+.autoSaveStatus {
+  font-size: 0.8em;
+  color: #666;
+  font-style: italic;
+  margin-top: 10px;
+}
 
+.clearButton {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+
+  &:hover {
+    background: #c0392b;
+  }
+}
