@@ -3,6 +3,63 @@ import { db } from '@/lib/firebase';
 import { Post, PostWithUser, User } from '@/types';
 import PostDetailClient from './PostDetailClient';
 import { Timestamp } from 'firebase/firestore';
+import { Metadata } from "next";
+
+// app/posts/[postId]/page.tsx
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ postId: string }>;
+}): Promise<Metadata> {
+  const resolvedParams = await params;
+  const postData = await getPostData(resolvedParams.postId);
+
+  if (!postData) {
+    return {
+      title: 'Post não encontrado',
+      description: 'Este post não está disponível.',
+    };
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blog-cristao.vercel.app/';
+  const postUrl = `${baseUrl}/posts/${resolvedParams.postId}`;
+
+  return {
+    title: postData.title || 'Post sem título',
+    description: postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
+    openGraph: {
+      title: postData.title || 'Post sem título',
+      description: postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
+      url: postUrl,
+      images: postData.featuredImageUrl
+        ? [
+            {
+              url: postData.featuredImageUrl,
+              width: 800,
+              height: 400,
+              alt: postData.title || 'Imagem do post',
+            },
+          ]
+        : [
+            {
+              url: `${baseUrl}/default-og-image.jpg`,
+              width: 800,
+              height: 400,
+              alt: 'Blog Cristão',
+            },
+          ],
+      type: 'article',
+      locale: 'pt_BR',
+      siteName: 'Blog Cristão',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: postData.title || 'Post sem título',
+      description: postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
+      images: postData.featuredImageUrl ? [postData.featuredImageUrl] : [`${baseUrl}/default-og-image.jpg`],
+    },
+  };
+}
 
 // Função para buscar dados do post no servidor
 async function getPostData(postId: string): Promise<PostWithUser | null> {
