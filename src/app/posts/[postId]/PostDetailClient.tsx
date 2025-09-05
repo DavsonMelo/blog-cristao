@@ -257,8 +257,19 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
     }
     const url = `${window.location.origin}/posts/${postId}`;
     const text = `Confira este post: ${post?.title || 'Post'} - ${url}`;
+
+    // Texto formatado
+  const shareText = `🌟 *${post?.title || 'Post'}* 🌟\n\n` +
+                   `${post?.excerpt || 'Confira este post inspirador!'}\n\n` +
+                   `🔗 ${url}\n\n` +
+                   `_Compartilhado do Blog Cristão_`;
+
     const encodedText = encodeURIComponent(text);
-    window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
+
+     // URL do WhatsApp
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+
+    window.open(whatsappUrl, '_blank');
   };
 
   if (loading) return <p className={styles.loading}>Carregando...</p>;
