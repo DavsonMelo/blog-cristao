@@ -7,8 +7,9 @@ interface DraftPost {
   content: string;
   imageFile?: File;
   previewUrl?: string;
-  authorUID?: string; // Adicione como opcional
-  authorEmail?: string; // Adicione como opcional
+  authorUID: string;      // torna obrigatório
+  authorEmail: string;    // torna obrigatório
+  authorPhoto?: string; 
 }
 
 interface DraftPostContextType {

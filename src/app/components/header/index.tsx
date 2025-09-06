@@ -11,6 +11,21 @@ import styles from './styles.module.scss';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
+const handleLogout = async () => {
+  try {
+    // Logout client-side do Firebase
+    await signOut(auth);
+
+    // Limpa session cookie do server
+    await fetch('/api/sessionLogout', { method: 'POST' });
+
+    // Redireciona pra home ou login
+    window.location.href = '/';
+  } catch (err: any) {
+    console.error('Erro ao deslogar:', err);
+  }
+};
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -90,7 +105,7 @@ export default function Header() {
                   </button>
                 </>
               )}
-              <button className={styles.out} onClick={() => signOut(auth)}>
+              <button className={styles.out} onClick={handleLogout}>
                 Sair
               </button>
             </div>

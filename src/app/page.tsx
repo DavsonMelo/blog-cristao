@@ -1,7 +1,7 @@
 'use client'
 
 import PostList from '@/app/components/post_list';
-import { usePosts } from './hooks/usePosts';
+import { usePosts } from '../hooks/usePosts';
 import styles from './page.module.scss';
 
 

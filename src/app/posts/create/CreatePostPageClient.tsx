@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 import { useDraftPost } from '@/app/context/DraftPostContext';
-import { compressImage } from '@/lib/image-compression';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { usePrefetch } from '@/hooks/usePrefetch';
 import styles from './styles.module.scss';
 
 interface CreatePostPageClientProps {
-  user?: {
+  user: {
     uid: string;
     email: string;
     email_verified?: boolean;
@@ -26,70 +24,49 @@ interface DraftData {
 }
 
 export default function CreatePostPageClient({
-  user: serverUser,
+  user,
 }: CreatePostPageClientProps) {
   const router = useRouter();
-  const userFromClient = useAuthRedirect();
   const { draft, setDraft } = useDraftPost();
-  const user = serverUser || userFromClient;
 
   const [title, setTitle] = useState(draft?.title || '');
   const [content, setContent] = useState(draft?.content || '');
   const [imageFile, setImageFile] = useState<File | null>(
     draft?.imageFile || null
   );
-  const [previewUrl, setPreviewUrl] = useState<string | null>(
-    draft?.previewUrl || null
-  );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [compressing, setCompressing] = useState(false);
 
   const MAX_CONTENT_LENGTH = 700;
 
-  // 1. ✅ USO DO useAutoSave
   const { loadSavedData, clearSavedData } = useAutoSave<DraftData>(
     { title, content, timestamp: Date.now() },
     'postDraft',
-    3000 // Salva a cada 3 segundos de inatividade
+    3000
   );
 
-  // 2. ✅ USO DO usePrefetch
-  usePrefetch(
-    '/posts/preview',
-    title.length > 3 && content.length > 10 // Pré-carrega só quando válido
-  );
+  usePrefetch('/posts/preview', title.length > 3 && content.length > 10);
 
-  // Carregar rascunho salvo ao iniciar
   useEffect(() => {
-    const savedDraft = loadSavedData();
-    if (savedDraft && !draft?.title) {
-      setTitle(savedDraft.title || '');
-      setContent(savedDraft.content || '');
-      console.log('Rascunho recuperado do auto-save');
-    }
-  }, [loadSavedData, draft]);
-
-  // Limpar rascunho quando post for criado com sucesso
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (title || content) {
-        e.preventDefault();
-        e.returnValue =
-          'Você tem alterações não salvas. Tem certeza que deseja sair?';
+    const load = () => {
+      try {
+        const saved = localStorage.getItem('postDraft');
+        return saved ? JSON.parse(saved) : null;
+      } catch (error) {
+        console.error('Erro ao carregar dados salvos:', error);
+        return null;
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [title, content]);
-
-  const handleImageSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      // ... (código existente da compressão) ...
-    },
-    []
-  );
+    if (!draft) {
+      const savedDraft = load();
+      if (savedDraft) {
+        setTitle(savedDraft.title || '');
+        setContent(savedDraft.content || '');
+        console.log('Rascunho recuperado do auto-save');
+      }
+    }
+  }, [draft]);
 
   const handlePreview = () => {
     if (!title || !content || !imageFile) {
@@ -103,15 +80,7 @@ export default function CreatePostPageClient({
       return;
     }
 
-     // ✅ Verificação segura do user
-    if (!user) {
-      setError('Usuário não autenticado');
-      return;
-    }
-
     setLoading(true);
-
-    // Limpar auto-save ao enviar para preview
     clearSavedData();
 
     setDraft({
@@ -120,7 +89,7 @@ export default function CreatePostPageClient({
       imageFile,
       previewUrl: URL.createObjectURL(imageFile),
       authorUID: user.uid,
-      authorEmail: user.email ?? undefined,
+      authorEmail: user.email,
     });
 
     setError('');
@@ -132,34 +101,67 @@ export default function CreatePostPageClient({
     setTitle('');
     setContent('');
     setImageFile(null);
-    setPreviewUrl(null);
+    setDraft(null);
     clearSavedData();
-    setError('Rascunho limpo com sucesso');
   };
-
-  if (!user) return null;
 
   return (
     <div className={styles.createPost}>
       <h1 className={styles.title}>Criar Novo Post</h1>
 
-      {/* Botão para limpar rascunho */}
-      {(title || content) && (
-        <button
-          onClick={handleClearDraft}
-          className={styles.clearButton}
-          type="button"
-        >
-          Limpar Rascunho
-        </button>
-      )}
+      <div style={{ fontSize: '14px', color: '#666', marginBottom: '1rem' }}>
+        Logado como: {user.email}
+      </div>
 
       <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
-        {/* ... (campos existentes) ... */}
+        <input
+          type="text"
+          placeholder="Título"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={100}
+          className={styles.input}
+          required
+        />
+        <textarea
+          placeholder="Conteúdo"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          maxLength={MAX_CONTENT_LENGTH}
+          className={styles.textarea}
+          required
+        />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+          className={styles.input}
+          required
+        />
 
-        {/* Indicador de auto-save */}
-        <div className={styles.autoSaveStatus}>
-          {title || content ? '✓ Rascunho sendo salvo automaticamente' : ''}
+        {error && <p className={styles.error}>{error}</p>}
+
+        <div className={styles.actions}>
+          <button
+            type="button"
+            onClick={handlePreview}
+            disabled={loading}
+            className={styles.previewButton}
+          >
+            {loading ? 'Carregando...' : 'Preview'}
+          </button>
+          <div className={styles.autoSaveStatus}>
+            {title || content ? '✓ Rascunho sendo salvo automaticamente' : ''}
+          </div>
+          {(title || content || imageFile) && (
+            <button
+              onClick={handleClearDraft}
+              className={styles.clearButton}
+              type="button"
+            >
+              Limpar Rascunho
+            </button>
+          )}
         </div>
       </form>
     </div>

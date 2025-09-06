@@ -4,14 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 import { useDraftPost } from '@/app/context/DraftPostContext';
 import { Post, User } from '@/types';
 import styles from './styles.module.scss';
 
 export default function PreviewPage() {
   const router = useRouter();
-  const user = useAuthRedirect();
   const { draft, setDraft } = useDraftPost();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,7 +22,9 @@ export default function PreviewPage() {
     }
   }, [error]);
 
-  if (!draft || !user) return null;
+  if (!draft) {
+    return <p>Nenhum rascunho encontrado 😬</p>;
+  }
 
   const handlePublish = async () => {
     if (!draft.title || !draft.content || !draft.imageFile) {
@@ -35,14 +35,14 @@ export default function PreviewPage() {
     setLoading(true);
     try {
       // Criar documento do usuário, se necessário
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(db, 'users', draft.authorUID);
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists()) {
         const userData: User = {
-          uid: user.uid,
-          name: user.displayName || 'Usuário Anônimo',
-          email: user.email || '',
-          profileImageUrl: user.photoURL || '/default-avatar.jpg',
+          uid: draft.authorUID,
+          name: draft.authorEmail.split('@')[0] || 'Usuário Anônimo',
+          email: draft.authorEmail,
+          profileImageUrl: draft.authorPhoto || '/default-avatar.jpg',
         };
         await setDoc(userRef, userData);
       }
@@ -61,14 +61,15 @@ export default function PreviewPage() {
       }
 
       // Criar o post no Firestore
-      const excerpt = draft.content.length > 200 ? draft.content.slice(0, 200) + '...' : draft.content;
+      const excerpt =
+        draft.content.length > 200 ? draft.content.slice(0, 200) + '...' : draft.content;
 
       const newPost: Omit<Post, 'createdAt'> & { createdAt?: any } = {
         title: draft.title,
         content: draft.content,
         excerpt,
         featuredImageUrl: data.secure_url,
-        authorUID: user.uid,
+        authorUID: draft.authorUID,
         createdAt: serverTimestamp(),
         likesCount: 0,
         commentsCount: 0,
@@ -88,11 +89,11 @@ export default function PreviewPage() {
     <div className={styles.previewPage}>
       <div className={styles.author}>
         <img
-          src={user.photoURL || '/default-avatar.jpg'}
-          alt={user.displayName ?? 'Usuário'}
+          src={draft.authorPhoto || '/default-avatar.jpg'}
+          alt={draft.authorEmail}
           className={styles.avatar}
         />
-        <span className={styles.name}>{user.displayName}</span>
+        <span className={styles.name}>{draft.authorEmail}</span>
       </div>
       <h1 className={styles.title}>{draft.title}</h1>
       {draft.previewUrl && (

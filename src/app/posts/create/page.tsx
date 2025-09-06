@@ -22,19 +22,19 @@ export default async function CreatePostPage() {
   }
 
   // Verificar se o session cookie é válido
-  const user = await verifySessionCookie(sessionCookie) as AdminUser | null;
+  const user = (await verifySessionCookie(sessionCookie)) as AdminUser | null;
 
   if (!user) {
     // Cookie inválido ou expirado
     redirect('/login?redirect=/posts/create');
   }
- // Transforma para o formato esperado pelo client
+  // Transforma para o formato esperado pelo client
   const userForClient = {
     uid: user.uid,
     email: user.email || '',
     email_verified: user.email_verified || false,
     name: user.name || '',
-    picture: user.picture || ''
+    picture: user.picture || '',
   };
 
   return <CreatePostPageClient user={userForClient} />;

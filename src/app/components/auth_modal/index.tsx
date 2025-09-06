@@ -1,61 +1,68 @@
 'use client';
 
-// lib externas
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  GithubAuthProvider,
-} from 'firebase/auth';
-import { serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
-import { X } from 'lucide-react';
-import { getDoc } from 'firebase/firestore';
-
-
-// libs e codigos proprios
 import { auth, db } from '@/lib/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, GithubAuthProvider, signInWithPopup } from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './styles.module.scss';
+import { X } from 'lucide-react';
 import { User } from '@/types';
 
+export default function AuthModal() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
 
-interface AuthModalProps {
-  onClose: () => void;
-}
-
-// ➡️ Nova função para salvar o perfil do usuário
-const saveUserProfile = async (userAuth: any) => {
-  if (!userAuth) return;
-
-  const userRef = doc(db, 'users', userAuth.uid);
-  const userDoc = await getDoc(userRef);
-
-  if (!userDoc.exists()) {
-    const userProfile: User = {
-      uid: userAuth.uid,
-      name: userAuth.displayName || 'Usuário',
-      email: userAuth.email || '',
-      profileImageUrl: userAuth.photoURL || undefined,
-    };
-    await setDoc(userRef, userProfile);
-  } else {
-    // ➡️ Atualiza o perfil caso já exista (usado para Google/GitHub)
-    await setDoc(userRef, {
-      name: userAuth.displayName || 'Usuário',
-      email: userAuth.email,
-      profileImageUrl: userAuth.photoURL || undefined,
-    }, { merge: true });
-  }
-};
-
-
-export default function AuthModal({ onClose }: AuthModalProps) {
-  const [view, setView] = useState('default'); 
+  const [view, setView] = useState<'default' | 'createAccount' | 'login'>('default');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Salva/atualiza perfil no Firestore
+  const saveUserProfile = async (userAuth: any) => {
+    if (!userAuth) return;
+
+    const userRef = doc(db, 'users', userAuth.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+      const userProfile: User = {
+        uid: userAuth.uid,
+        name: userAuth.displayName || 'Usuário',
+        email: userAuth.email || '',
+        profileImageUrl: userAuth.photoURL || undefined,
+      };
+      await setDoc(userRef, userProfile);
+    } else {
+      await setDoc(
+        userRef,
+        {
+          name: userAuth.displayName || 'Usuário',
+          email: userAuth.email,
+          profileImageUrl: userAuth.photoURL || undefined,
+        },
+        { merge: true }
+      );
+    }
+  };
+
+  // Cria session cookie via API
+  const createSessionCookie = async () => {
+    if (!auth.currentUser) return;
+
+    const idToken = await auth.currentUser.getIdToken(true);
+    await fetch('/api/sessionLogin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+  };
+
+  const handleRedirect = () => {
+    router.push(redirectTo);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,17 +70,22 @@ export default function AuthModal({ onClose }: AuthModalProps) {
       alert('As senhas não coincidem!');
       return;
     }
+
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Salva os dados do novo usuário no Firestore após o cadastro
+
+      // Salva perfil no Firestore
       await setDoc(doc(db, 'users', userCred.user.uid), {
         uid: userCred.user.uid,
         name,
         email,
         createdAt: serverTimestamp(),
       });
-      onClose(); 
+
+      await createSessionCookie(); // ✅ cria cookie para server-side
+      await saveUserProfile(userCred.user);
+
+      handleRedirect(); // vai para a página desejada
     } catch (err: any) {
       console.error(err);
       alert(err.message);
@@ -83,12 +95,12 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // ➡️ Login com sucesso
       const userCred = await signInWithEmailAndPassword(auth, email, password);
-      
-      // ➡️ O erro estava aqui! Não salvava o perfil do usuário no login
+
+      await createSessionCookie();
       await saveUserProfile(userCred.user);
-      onClose();
+
+      handleRedirect();
     } catch (err: any) {
       console.error(err);
       alert('Erro ao fazer login: ' + err.message);
@@ -99,9 +111,12 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
+
+      await createSessionCookie();
       await saveUserProfile(result.user);
-      onClose();
-    } catch(err: any) {
+
+      handleRedirect();
+    } catch (err: any) {
       console.error(err);
       alert('Erro ao fazer login com Google: ' + err.message);
     }
@@ -110,20 +125,22 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   const handleGitHubLogin = async () => {
     try {
       const provider = new GithubAuthProvider();
-      const result = await signInWithPopup(auth, provider)
+      const result = await signInWithPopup(auth, provider);
+
+      await createSessionCookie();
       await saveUserProfile(result.user);
-      onClose();
-    } catch(err: any) {
+
+      handleRedirect();
+    } catch (err: any) {
       console.error(err);
       alert('Erro ao fazer login com GitHub: ' + err.message);
     }
   };
 
-
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        <button className={styles.close} onClick={onClose}>
+        <button className={styles.close} onClick={handleRedirect}>
           <X />
         </button>
 
@@ -132,50 +149,21 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             <h2 className={styles.modalTitle}>Inscreva-se</h2>
             <button className={styles.provider} onClick={handleGoogleLogin}>Com Google</button>
             <button className={styles.provider} onClick={handleGitHubLogin}>Com GitHub</button>
-            <button
-              className={styles.createAccount} onClick={() => setView('createAccount')}>
-                Criar Conta
-            </button>
+            <button className={styles.createAccount} onClick={() => setView('createAccount')}>Criar Conta</button>
             <p>
               Já tem uma conta?
-              <button className={styles.switch} onClick={() => setView('login')}>
-                Entrar
-              </button>
+              <button className={styles.switch} onClick={() => setView('login')}>Entrar</button>
             </p>
           </>
         ) : view === 'createAccount' ? (
           <>
             <h2>Criar Conta</h2>
             <form className={styles.form} onSubmit={handleSubmit}>
-              <input
-                type="text"
-                placeholder="Nome"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <input
-                type="password"
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <input
-                type="password"
-                placeholder="Repetir senha"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-               <button type="submit">Criar Conta</button>
+              <input type="text" placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} required />
+              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input type="password" placeholder="Repetir senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+              <button type="submit">Criar Conta</button>
             </form>
             <button onClick={() => setView('default')}>Voltar</button>
           </>
@@ -183,20 +171,8 @@ export default function AuthModal({ onClose }: AuthModalProps) {
           <>
             <h2>Entrar</h2>
             <form className={styles.form} onSubmit={handleLogin}>
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <input
-                type="password"
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
               <button type="submit">Entrar</button>
             </form>
             <button onClick={() => setView('default')}>Voltar</button>

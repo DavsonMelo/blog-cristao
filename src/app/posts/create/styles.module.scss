@@ -2,49 +2,63 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;           // ocupa toda a tela
-  max-width: 1024px; 
-  margin: 32px auto;    // igual ao header
-  padding: 10px;         // opcional, dá espaço interno
+  width: 100%;
+  max-width: 1024px;
+  margin: 32px auto;
+  padding: 10px;
   box-sizing: border-box;
 }
+
 .title {
   text-align: center;
   margin-bottom: 12px;
   font-size: 20px;
 }
+
 .form {
-  width: 100%;           // faz o form ocupar toda a largura do container
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;           // espaçamento entre inputs
+  gap: 0.5rem;
   border: 2px solid rgba(var(--text-color-rgb), 0.2);
   padding: 1rem;
   border-radius: 12px;
   box-sizing: border-box;
 }
+
 .input {
   padding: 8px;
   border: 2px solid rgba(var(--text-color-rgb), 0.2);
-  background-color: var(--text-color-rgb);
-  color: var(--text-color-rgb);
+  background-color: #fff;
+  color: #333;
   font-size: 14px;
   line-height: 25px;
+  border-radius: 6px;
 }
 
+.textarea {
+  padding: 8px;
+  border: 2px solid rgba(var(--text-color-rgb), 0.2);
+  background-color: #fff;
+  color: #333;
+  font-size: 14px;
+  line-height: 25px;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 120px;
+}
 
-.errorMessage {
+.error {
   margin-top: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
 
   font-size: 14px;
-  color: #b91c1c;             // vermelho escuro
-  background-color: #fee2e2;  // vermelho clarinho
-  border: 1px solid #fca5a5;  // borda avermelhada
+  color: #b91c1c;
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
   border-radius: 8px;
-
   padding: 6px 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
@@ -61,11 +75,11 @@
     transform: translateY(0);
   }
 }
+
 .autoSaveStatus {
   font-size: 0.8em;
   color: #666;
   font-style: italic;
-  margin-top: 10px;
 }
 
 .clearButton {
@@ -80,5 +94,27 @@
 
   &:hover {
     background: #c0392b;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.previewButton {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95em;
+
+  &:hover {
+    background-color: #2980b9;
   }
 }
