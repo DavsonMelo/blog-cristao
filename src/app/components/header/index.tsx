@@ -1,5 +1,6 @@
 'use client';
 
+import { Great_Vibes } from 'next/font/google';
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
@@ -10,6 +11,11 @@ import LoginButton from '@/app/components/login_button/index';
 import styles from './styles.module.scss';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+
+const greatVibes = Great_Vibes({
+    weight: '400',
+    subsets: ['latin'],
+  });
 
 const handleLogout = async () => {
   try {
@@ -80,7 +86,18 @@ export default function Header() {
     <header className={styles.header}>
       <div className={styles.container}>
         <div className={styles.logo}>
-          ❤️ Blog Cristão <span>❤️</span>
+          <button
+            className={`${styles.logoLink} ${greatVibes.className}`}
+            onClick={() => {
+              if (window.history.length > 1) {
+                router.back(); // 🔙 volta na pilha de navegação
+              } else {
+                router.push('/'); // fallback para home se não houver histórico
+              }
+            }}
+          >
+            ❤️ Blog Cristão <span>❤️</span>
+          </button>
         </div>
         <div className={styles.desktopNav}>
           <Link href="/" className={styles.link}>

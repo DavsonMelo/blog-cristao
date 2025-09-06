@@ -16,6 +16,14 @@
   position: relative;
   padding: 10px 10px;
 }
+.logoLink {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 25px;
+  color: var(--text-color);
+}
 
 .logo {
   font-family: var(--font-heading), sans-serif;
