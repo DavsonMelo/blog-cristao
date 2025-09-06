@@ -24,7 +24,7 @@ export default function LoginButton() {
       >
         <LogIn />
       </button>
-      {open && <AuthModal onClose={() => setOpen(false)}/>}
+      {open && <AuthModal />}
     </>
   );
 }

@@ -33,6 +33,20 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Função que dispara o prefetch apenas uma vez
+  const handlePrefetch = (() => {
+    let prefetched = false;
+    return () => {
+      if (!prefetched) {
+        router.prefetch('/posts/create');
+        prefetched = true;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Prefetch /posts/create disparado!');
+        }
+      }
+    };
+  })();
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -57,12 +71,17 @@ export default function Header() {
     return () => clearTimeout(timer);
   }, [menuOpen]);
 
-  const firstName = user?.displayName?.split(' ')[0] || userData?.name?.split(' ')[0] || 'Usuário';
+  const firstName =
+    user?.displayName?.split(' ')[0] ||
+    userData?.name?.split(' ')[0] ||
+    'Usuário';
 
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        <div className={styles.logo}>❤️ Blog Cristão <span>❤️</span></div>
+        <div className={styles.logo}>
+          ❤️ Blog Cristão <span>❤️</span>
+        </div>
         <div className={styles.desktopNav}>
           <Link href="/" className={styles.link}>
             Home
@@ -73,10 +92,18 @@ export default function Header() {
         </div>
         <nav className={`${styles.nav} ${menuOpen ? styles.open : ''}`}>
           <div className={styles.mobileNavLinks}>
-            <Link href="/" className={styles.link} onClick={() => setMenuOpen(false)}>
+            <Link
+              href="/"
+              className={styles.link}
+              onClick={() => setMenuOpen(false)}
+            >
               Home
             </Link>
-            <Link href="/about" className={styles.link} onClick={() => setMenuOpen(false)}>
+            <Link
+              href="/about"
+              className={styles.link}
+              onClick={() => setMenuOpen(false)}
+            >
               Sobre
             </Link>
           </div>
@@ -87,10 +114,13 @@ export default function Header() {
                   <button
                     className={styles.createPost}
                     onClick={() => {
-                      localStorage.removeItem('draftPost');
+                      localStorage.removeItem('postDraft');
                       router.push('/posts/create');
                       setMenuOpen(false);
                     }}
+                    onMouseEnter={handlePrefetch} // desktop hover
+                    onFocus={handlePrefetch} // foco por teclado
+                    onTouchStart={handlePrefetch} // mobile touch
                   >
                     Criar post
                   </button>

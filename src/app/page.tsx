@@ -14,7 +14,7 @@ export default function Home() {
 
   return (
     <div className={styles.main}>
-      <PostList />
+      <PostList /> {/* carrega o componente PostList dentro da home */}
     </div>
   );
 }

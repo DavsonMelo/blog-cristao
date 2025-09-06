@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDraftPost } from '@/app/context/DraftPostContext';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { usePrefetch } from '@/hooks/usePrefetch';
 import styles from './styles.module.scss';
 
 interface CreatePostPageClientProps {
@@ -23,30 +22,33 @@ interface DraftData {
   timestamp: number;
 }
 
-export default function CreatePostPageClient({
-  user,
-}: CreatePostPageClientProps) {
+export default function CreatePostPageClient({ user }: CreatePostPageClientProps) {
   const router = useRouter();
   const { draft, setDraft } = useDraftPost();
 
+  // ---------------------------
+  // Estados locais do formulário
+  // ---------------------------
   const [title, setTitle] = useState(draft?.title || '');
   const [content, setContent] = useState(draft?.content || '');
-  const [imageFile, setImageFile] = useState<File | null>(
-    draft?.imageFile || null
-  );
+  const [imageFile, setImageFile] = useState<File | null>(draft?.imageFile || null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const MAX_CONTENT_LENGTH = 700;
 
+  // ----------------------------------------
+  // Hook de auto-save (salva rascunho no localStorage)
+  // ----------------------------------------
   const { loadSavedData, clearSavedData } = useAutoSave<DraftData>(
     { title, content, timestamp: Date.now() },
     'postDraft',
     3000
   );
 
-  usePrefetch('/posts/preview', title.length > 3 && content.length > 10);
-
+  // ---------------------------------------------------
+  // Recupera rascunho salvo no localStorage ao carregar
+  // ---------------------------------------------------
   useEffect(() => {
     const load = () => {
       try {
@@ -68,15 +70,16 @@ export default function CreatePostPageClient({
     }
   }, [draft]);
 
+  // -------------------------------
+  // Função de preview do post
+  // -------------------------------
   const handlePreview = () => {
     if (!title || !content || !imageFile) {
       setError('Todos os campos são obrigatórios!');
       return;
     }
     if (content.length > MAX_CONTENT_LENGTH) {
-      setError(
-        `O conteúdo deve ter no máximo ${MAX_CONTENT_LENGTH} caracteres.`
-      );
+      setError(`O conteúdo deve ter no máximo ${MAX_CONTENT_LENGTH} caracteres.`);
       return;
     }
 
@@ -97,6 +100,21 @@ export default function CreatePostPageClient({
     setLoading(false);
   };
 
+  // ---------------------------------------------
+  // Prefetch manual para /posts/preview no botão
+  // ---------------------------------------------
+  const handlePrefetch = () => {
+    if (title.length > 3 && content.length > 10) {
+      router.prefetch('/posts/preview');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Prefetch /posts/preview disparado!');
+      }
+    }
+  };
+
+  // -------------------------------
+  // Função para limpar o rascunho
+  // -------------------------------
   const handleClearDraft = () => {
     setTitle('');
     setContent('');
@@ -105,6 +123,9 @@ export default function CreatePostPageClient({
     clearSavedData();
   };
 
+  // -------------------------------
+  // Renderização do formulário
+  // -------------------------------
   return (
     <div className={styles.createPost}>
       <h1 className={styles.title}>Criar Novo Post</h1>
@@ -147,12 +168,17 @@ export default function CreatePostPageClient({
             onClick={handlePreview}
             disabled={loading}
             className={styles.previewButton}
+            onMouseEnter={handlePrefetch} // pré-carrega rota no hover
+            onFocus={handlePrefetch} // pré-carrega rota no foco
+            onTouchStart={handlePrefetch} // pré-carrega rota no toque mobile
           >
             {loading ? 'Carregando...' : 'Preview'}
           </button>
+
           <div className={styles.autoSaveStatus}>
             {title || content ? '✓ Rascunho sendo salvo automaticamente' : ''}
           </div>
+
           {(title || content || imageFile) && (
             <button
               onClick={handleClearDraft}

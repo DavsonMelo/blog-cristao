@@ -1,9 +1,9 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Post, PostWithUser, User } from '@/types';
+import { Post, PostWithUser, User } from '@/lib/types';
 import PostDetailClient from './PostDetailClient';
 import { Timestamp } from 'firebase/firestore';
-import { Metadata } from "next";
+import { Metadata } from 'next';
 
 // app/posts/[postId]/page.tsx
 export async function generateMetadata({
@@ -21,15 +21,18 @@ export async function generateMetadata({
     };
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blog-cristao.vercel.app/';
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://blog-cristao.vercel.app/';
   const postUrl = `${baseUrl}/posts/${resolvedParams.postId}`;
 
   return {
     title: postData.title || 'Post sem título',
-    description: postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
+    description:
+      postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
     openGraph: {
       title: postData.title || 'Post sem título',
-      description: postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
+      description:
+        postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
       url: postUrl,
       images: postData.featuredImageUrl
         ? [
@@ -55,8 +58,11 @@ export async function generateMetadata({
     twitter: {
       card: 'summary_large_image',
       title: postData.title || 'Post sem título',
-      description: postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
-      images: postData.featuredImageUrl ? [postData.featuredImageUrl] : [`${baseUrl}/default-og-image.jpg`],
+      description:
+        postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
+      images: postData.featuredImageUrl
+        ? [postData.featuredImageUrl]
+        : [`${baseUrl}/default-og-image.jpg`],
     },
   };
 }
@@ -119,7 +125,7 @@ async function getPostData(postId: string): Promise<PostWithUser | null> {
 type PostPageProps = {
   params: Promise<{
     postId: string;
-  }>
+  }>;
 };
 
 export default async function PostDetailPage({ params }: PostPageProps) {

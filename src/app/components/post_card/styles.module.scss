@@ -16,7 +16,7 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 
   &:hover {
-    transform: translateY(-5px) scale(1.02);
+    transform: translateY(-5px) scale(1.005);
     box-shadow: 0 15px 30px rgba(var(--text-color-rgb), 0.25);
   }
 }
@@ -56,14 +56,8 @@
 }
 
 .author {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
   gap: 5px;
   margin-bottom: 24px;
-
-  width: 100%;
   box-sizing: border-box;
   color: var(--text-color);
 }
@@ -103,3 +97,26 @@
     color: red; // Efeito hover no coração
   }
 }
+.authorInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  gap: 5px;
+  color: var(--text-color);
+}
+
+.createdDate {
+  font-size: 10px;
+  color: var(--text-color);
+  white-space: nowrap; /* evita quebrar a data em duas linhas */
+}
+

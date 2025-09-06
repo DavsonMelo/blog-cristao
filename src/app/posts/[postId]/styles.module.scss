@@ -8,12 +8,13 @@
 
 .callAction {
     text-align: center;
-    margin-top: 12px;
-    margin-bottom: 12px;
+    margin-top: 15px;
+    margin-bottom: 15px;
     font-size: 20px;
     cursor: pointer;
     transition: color 0.3s ease;
     color: var(--text-color);
+    text-decoration: none;;
 
     &:hover {
       color: #2563eb;
@@ -120,12 +121,6 @@
   width: 20px;
   height: 20px;
 }
-
-.name {
-  font-size: 14px;
-  color: var(--text-color);
-}
-
 .interations {
   display: flex;
   flex-direction: row;
@@ -244,14 +239,18 @@
 
 .commentAuthor {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-color);
   margin-bottom: 4px;
   display: block;
 }
+.commentDate {
+  font-size: 12px;
+  color: var(--text-color);
+}
 
 .commentContent {
-  font-size: 14px;
+  font-size: 15px;
   margin-top: 15px;
   margin-bottom: 15px;
   line-height: 1.6;
@@ -262,4 +261,35 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+}
+.authorInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 12px; /* ou o que tu achar melhor */
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-color);
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.name {
+  font-size: 10px;
+  color: var(--text-color);
+}
+
+.createdAt {
+  font-size: 10px;
+  color: var(--text-color);
+  white-space: nowrap;
 }

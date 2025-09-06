@@ -48,11 +48,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <ThemeProvider>
-          <DraftPostProvider>
-            <Header />
+         <ThemeProvider>{/* providencia o tema escolhido pelo usuario e armazena as mudanças */}
+          <DraftPostProvider>{/* Esse código implementa um Context API no React para gerenciar o estado de um rascunho de post (com título, conteúdo, autor etc.). */}
+            <Header />{/* header da aplicação. Vai em todas as pages */}
             <main
-             style={{ paddingTop: '60px' }}>
+             style={{ paddingTop: '60px' }}> 
               {children}
               <ToastContainer />
               </main>

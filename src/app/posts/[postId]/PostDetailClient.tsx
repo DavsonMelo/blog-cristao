@@ -17,7 +17,7 @@ import {
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
 import { toast } from 'react-toastify';
-import { PostWithUser, User } from '@/types';
+import { PostWithUser, User } from '@/lib/types';
 import styles from './styles.module.scss';
 import { Heart, MessageSquare, Share2, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -40,14 +40,19 @@ interface PostDetailClientProps {
   postId: string;
 }
 
-export default function PostDetailClient({ initialPost, postId }: PostDetailClientProps) {
+export default function PostDetailClient({
+  initialPost,
+  postId,
+}: PostDetailClientProps) {
   const [post, setPost] = useState<PostWithUser | null>(initialPost);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, loadingUser] = useAuthState(auth);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(initialPost.likesCount || 0);
-  const [commentsCount, setCommentsCount] = useState(initialPost.commentsCount || 0);
+  const [commentsCount, setCommentsCount] = useState(
+    initialPost.commentsCount || 0
+  );
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
   const router = useRouter();
@@ -60,59 +65,75 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
     }
 
     const postRef = doc(db, 'posts', postId);
-    const unsubscribePost = onSnapshot(postRef, async (postSnap) => {
-      if (!postSnap.exists()) {
-        setError('Post não encontrado');
-        setLoading(false);
-        return;
-      }
+    const unsubscribePost = onSnapshot(
+      postRef,
+      async (postSnap) => {
+        if (!postSnap.exists()) {
+          setError('Post não encontrado');
+          setLoading(false);
+          return;
+        }
 
-      const postData = postSnap.data() as PostWithUser;
-      const userRef = doc(db, 'users', postData.authorUID);
-      const userSnap = await getDoc(userRef);
-      let userData: User | undefined;
-      if (userSnap.exists()) {
-        const rawUserData = userSnap.data() as User;
-        // Converter createdAt do userData para string ISO de forma segura
-        let userCreatedAt: string | null = null;
-        if (rawUserData.createdAt) {
-          if (typeof rawUserData.createdAt === 'string') {
-            userCreatedAt = rawUserData.createdAt;
-          } else if (rawUserData.createdAt && typeof rawUserData.createdAt === 'object' && 'toDate' in rawUserData.createdAt) {
-            userCreatedAt = (rawUserData.createdAt as Timestamp).toDate().toISOString();
+        const postData = postSnap.data() as PostWithUser;
+        const userRef = doc(db, 'users', postData.authorUID);
+        const userSnap = await getDoc(userRef);
+        let userData: User | undefined;
+        if (userSnap.exists()) {
+          const rawUserData = userSnap.data() as User;
+          // Converter createdAt do userData para string ISO de forma segura
+          let userCreatedAt: string | null = null;
+          if (rawUserData.createdAt) {
+            if (typeof rawUserData.createdAt === 'string') {
+              userCreatedAt = rawUserData.createdAt;
+            } else if (
+              rawUserData.createdAt &&
+              typeof rawUserData.createdAt === 'object' &&
+              'toDate' in rawUserData.createdAt
+            ) {
+              userCreatedAt = (rawUserData.createdAt as Timestamp)
+                .toDate()
+                .toISOString();
+            }
+          }
+          userData = { ...rawUserData, createdAt: userCreatedAt };
+        }
+
+        // Converter createdAt do postData para string ISO de forma segura
+        let createdAt: string | null = null;
+        if (postData.createdAt) {
+          if (typeof postData.createdAt === 'string') {
+            createdAt = postData.createdAt;
+          } else if (
+            postData.createdAt &&
+            typeof postData.createdAt === 'object' &&
+            'toDate' in postData.createdAt
+          ) {
+            createdAt = (postData.createdAt as Timestamp)
+              .toDate()
+              .toISOString();
           }
         }
-        userData = { ...rawUserData, createdAt: userCreatedAt };
-      }
 
-      // Converter createdAt do postData para string ISO de forma segura
-      let createdAt: string | null = null;
-      if (postData.createdAt) {
-        if (typeof postData.createdAt === 'string') {
-          createdAt = postData.createdAt;
-        } else if (postData.createdAt && typeof postData.createdAt === 'object' && 'toDate' in postData.createdAt) {
-          createdAt = (postData.createdAt as Timestamp).toDate().toISOString();
+        setPost({
+          ...postData,
+          id: postSnap.id,
+          createdAt,
+          user: userData,
+        });
+        setLikesCount(postData.likesCount || 0);
+        setCommentsCount(postData.commentsCount || 0);
+        if (user) {
+          const likeRef = doc(db, `posts/${postId}/likes/${user.uid}`);
+          const likeSnap = await getDoc(likeRef);
+          setLiked(likeSnap.exists());
         }
+        setLoading(false);
+      },
+      (err) => {
+        setError('Erro ao carregar post');
+        setLoading(false);
       }
-
-      setPost({
-        ...postData,
-        id: postSnap.id,
-        createdAt,
-        user: userData,
-      });
-      setLikesCount(postData.likesCount || 0);
-      setCommentsCount(postData.commentsCount || 0);
-      if (user) {
-        const likeRef = doc(db, `posts/${postId}/likes/${user.uid}`);
-        const likeSnap = await getDoc(likeRef);
-        setLiked(likeSnap.exists());
-      }
-      setLoading(false);
-    }, (err) => {
-      setError('Erro ao carregar post');
-      setLoading(false);
-    });
+    );
 
     const commentsRef = collection(db, `posts/${postId}/comments`);
     const commentsQuery = query(commentsRef);
@@ -123,7 +144,11 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
         if (data.createdAt) {
           if (typeof data.createdAt === 'string') {
             createdAt = data.createdAt;
-          } else if (data.createdAt && typeof data.createdAt === 'object' && 'toDate' in data.createdAt) {
+          } else if (
+            data.createdAt &&
+            typeof data.createdAt === 'object' &&
+            'toDate' in data.createdAt
+          ) {
             createdAt = (data.createdAt as Timestamp).toDate().toISOString();
           }
         }
@@ -138,7 +163,10 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
       if (user) {
         const updatedComments = await Promise.all(
           commentsData.map(async (comment) => {
-            const likeRef = doc(db, `posts/${postId}/comments/${comment.id}/likes/${user.uid}`);
+            const likeRef = doc(
+              db,
+              `posts/${postId}/comments/${comment.id}/likes/${user.uid}`
+            );
             const likeSnap = await getDoc(likeRef);
             return { ...comment, likedByUser: likeSnap.exists() };
           })
@@ -225,7 +253,10 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
     if (loadingUser) return;
 
     const commentRef = doc(db, `posts/${postId}/comments/${commentId}`);
-    const likeRef = doc(db, `posts/${postId}/comments/${commentId}/likes/${user.uid}`);
+    const likeRef = doc(
+      db,
+      `posts/${postId}/comments/${commentId}/likes/${user.uid}`
+    );
 
     try {
       await runTransaction(db, async (transaction) => {
@@ -240,7 +271,11 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
       setComments((prev) =>
         prev.map((c) =>
           c.id === commentId
-            ? { ...c, likedByUser: !isLiked, likesCount: isLiked ? c.likesCount - 1 : c.likesCount + 1 }
+            ? {
+                ...c,
+                likedByUser: !isLiked,
+                likesCount: isLiked ? c.likesCount - 1 : c.likesCount + 1,
+              }
             : c
         )
       );
@@ -259,15 +294,16 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
     const text = `Confira este post: ${post?.title || 'Post'} - ${url}`;
 
     // Texto formatado
-  const shareText = `🌟 *${post?.title || 'Post'}* 🌟\n\n` +
-                   `${post?.excerpt || 'Confira este post inspirador!'}\n\n` +
-                   `🔗 ${url}\n\n` +
-                   `_Compartilhado do Blog Cristão_`;
+    const shareText =
+      `🌟 *${post?.title || 'Post'}* 🌟\n\n` +
+      `${post?.excerpt || 'Confira este post inspirador!'}\n\n` +
+      `🔗 ${url}\n\n` +
+      `_Compartilhado do Blog Cristão_`;
 
     const encodedText = encodeURIComponent(text);
 
-     // URL do WhatsApp
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+    // URL do WhatsApp
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
 
     window.open(whatsappUrl, '_blank');
   };
@@ -278,24 +314,31 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
 
   return (
     <div className={styles.sectionView}>
-      <h2
-        className={styles.callAction}
-        onClick={() => router.push('/')}
-        >
-        Leia mais posts inspiradores<br />clicando aqui
-      </h2>
+      <a href="/" className={styles.callAction}>
+        Leia mais posts inspiradores
+        <br />
+        clicando aqui
+      </a>
       <div className={styles.postView}>
-        <div
-          className={styles.author}
-          onClick={handleAuthorClick}
-          style={{ cursor: 'pointer' }}
-        >
-          <img
-            src={post.user?.profileImageUrl || '/default-avatar.jpg'}
-            alt={post.user?.name || 'Usuário'}
-            className={styles.avatar}
-          />
-          <span className={styles.name}>{post.user?.name || 'Usuário'}</span>
+        <div className={styles.authorInfo}>
+          <div
+            className={styles.author}
+            onClick={handleAuthorClick}
+            style={{ cursor: 'pointer' }}
+          >
+            <img
+              src={post.user?.profileImageUrl || '/default-avatar.jpg'}
+              alt={post.user?.name || 'Usuário'}
+              className={styles.avatar}
+            />
+            <span className={styles.name}>{post.user?.name || 'Usuário'}</span>
+          </div>
+          <span className={styles.createdAt}>
+            {post.createdAt &&
+              format(new Date(post.createdAt), 'd MMM yyyy, HH:mm', {
+                locale: ptBR,
+              })}
+          </span>
         </div>
         <h1 className={styles.title}>{post.title}</h1>
         {post.featuredImageUrl && (
@@ -325,7 +368,10 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
           <span>
             <MessageSquare size={18} /> {commentsCount}
           </span>
-          <span onClick={handleShare} style={{ cursor: user && !loadingUser ? 'pointer' : 'not-allowed' }}>
+          <span
+            onClick={handleShare}
+            style={{ cursor: user && !loadingUser ? 'pointer' : 'not-allowed' }}
+          >
             <Share2 size={18} />
           </span>
         </div>
@@ -350,16 +396,24 @@ export default function PostDetailClient({ initialPost, postId }: PostDetailClie
             {comments.map((comment) => (
               <div key={comment.id} className={styles.comment}>
                 <div className={styles.commentHeader}>
-                  <span className={styles.commentAuthor}>{comment.authorName}</span>
+                  <span className={styles.commentAuthor}>
+                    {comment.authorName}
+                  </span>
                   {comment.createdAt && (
                     <span className={styles.commentDate}>
-                      {format(new Date(comment.createdAt), 'd MMM yyyy, HH:mm', { locale: ptBR })}
+                      {format(
+                        new Date(comment.createdAt),
+                        'd MMM yyyy, HH:mm',
+                        { locale: ptBR }
+                      )}
                     </span>
                   )}
                 </div>
                 <p className={styles.commentContent}>{comment.content}</p>
                 <span
-                  onClick={() => handleCommentLike(comment.id, comment.likedByUser)}
+                  onClick={() =>
+                    handleCommentLike(comment.id, comment.likedByUser)
+                  }
                   className={styles.commentLike}
                 >
                   <Heart

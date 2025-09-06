@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase'; // seu init do Firebase
-import type { Post } from '@/types'; // define interface Post { id, title, content, createdAt, ... }
+import type { Post } from '@/lib/types'; // define interface Post { id, title, content, createdAt, ... }
 
 export const usePosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
