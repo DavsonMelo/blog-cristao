@@ -191,7 +191,7 @@ export default function PostList({ authorUID }: PostListProps = {}) {
   // Renderização principal
   return (
     <div className={styles.container}>
-      <h2>
+      <h2 className={styles.titleContainer}>
         fique à vontade para criar seu proprio Card e enviar a quem você ama!
       </h2>
       <section className={styles.grid}>
