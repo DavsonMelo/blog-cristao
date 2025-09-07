@@ -88,13 +88,7 @@ export default function Header() {
         <div className={styles.logo}>
           <button
             className={`${styles.logoLink} ${greatVibes.className}`}
-            onClick={() => {
-              if (window.history.length > 1) {
-                router.back(); // 🔙 volta na pilha de navegação
-              } else {
-                router.push('/'); // fallback para home se não houver histórico
-              }
-            }}
+            onClick={() => { router.push('/'), setMenuOpen(false) }}
           >
             ❤️ Blog Cristão <span>❤️</span>
           </button>
