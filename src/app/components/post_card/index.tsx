@@ -1,23 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  getDoc,
-  doc,
-  getDocs,
-  setDoc,
-  deleteDoc,
-  increment,
-  updateDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import styles from './styles.module.scss';
-import { db, auth } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import type { PostWithUser, User } from '@/lib/types';
 import { Heart, MessageSquare, Share2 } from 'lucide-react';
-import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePostLikes } from "@/hooks/usePostLikes";
@@ -27,7 +15,7 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post }: PostCardProps) {
-  const [firebaseUser, loadingUser] = useAuthState(auth);
+  const [firebaseUser] = useAuthState(auth);
   const user: User | null = firebaseUser
     ?{
       uid: firebaseUser.uid,

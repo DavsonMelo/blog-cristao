@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
+import { usePostLikes } from '@/hooks/usePostLikes';
 
 interface Comment {
   id: string;
@@ -44,12 +45,22 @@ export default function PostDetailClient({
   initialPost,
   postId,
 }: PostDetailClientProps) {
+  const [firebaseUser] = useAuthState(auth);
+  const user: User | null = firebaseUser
+    ? {
+        uid: firebaseUser.uid,
+        name: firebaseUser.displayName || 'Usuário',
+        profileImageUrl: firebaseUser.photoURL || '/default-avatar.jpg',
+        email: firebaseUser.email || '',
+        createdAt: null,
+      }
+    : null;
+
+  const { liked, likesCount, toggleLike } = usePostLikes(initialPost, user ?? null);
   const [post, setPost] = useState<PostWithUser | null>(initialPost);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [user, loadingUser] = useAuthState(auth);
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(initialPost.likesCount || 0);
+  const [puser, loadingUser] = useAuthState(auth);
   const [commentsCount, setCommentsCount] = useState(
     initialPost.commentsCount || 0
   );
@@ -120,12 +131,10 @@ export default function PostDetailClient({
           createdAt,
           user: userData,
         });
-        setLikesCount(postData.likesCount || 0);
         setCommentsCount(postData.commentsCount || 0);
         if (user) {
           const likeRef = doc(db, `posts/${postId}/likes/${user.uid}`);
           const likeSnap = await getDoc(likeRef);
-          setLiked(likeSnap.exists());
         }
         setLoading(false);
       },
@@ -203,8 +212,6 @@ export default function PostDetailClient({
           transaction.update(postRef, { likesCount: increment(1) });
         }
       });
-      setLiked(!liked);
-      setLikesCount((prev) => (liked ? Math.max(0, prev - 1) : prev + 1));
       toast.success(liked ? 'Like removido' : 'Post curtido');
     } catch (error) {
       toast.error('Erro ao processar like');
@@ -232,7 +239,7 @@ export default function PostDetailClient({
       await setDoc(commentRef, {
         content: comment,
         authorUID: user.uid,
-        authorName: user.displayName || 'Usuário',
+        authorName: user.name || 'Usuário',
         createdAt: serverTimestamp(),
         likesCount: 0,
       });
@@ -355,7 +362,7 @@ export default function PostDetailClient({
         <p className={styles.content}>{post.content}</p>
         <div className={styles.interations}>
           <span
-            onClick={handleLike}
+            onClick={toggleLike}
             style={{ cursor: user && !loadingUser ? 'pointer' : 'not-allowed' }}
           >
             <Heart
@@ -365,8 +372,9 @@ export default function PostDetailClient({
             />
             {likesCount}
           </span>
-          <span>
-            <MessageSquare size={18} /> {commentsCount}
+          <span style={{cursor: 'not-allowed'}}>
+            <MessageSquare size={18}
+            /> {commentsCount}
           </span>
           <span
             onClick={handleShare}
