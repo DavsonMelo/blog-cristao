@@ -1,52 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  getDoc,
-  doc,
-  getDocs,
-  setDoc,
-  deleteDoc,
-  increment,
-  updateDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import styles from './styles.module.scss';
-import { db, auth } from '@/lib/firebase';
-import type { PostWithUser } from '@/lib/types';
+import { auth } from '@/lib/firebase';
+import type { PostWithUser, User } from '@/lib/types';
 import { Heart, MessageSquare, Share2 } from 'lucide-react';
-import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { usePostLikes } from "@/hooks/usePostLikes";
 
 interface PostCardProps {
   post: PostWithUser;
 }
 
 export default function PostCard({ post }: PostCardProps) {
-  const [user, loadingUser] = useAuthState(auth);
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  const [firebaseUser] = useAuthState(auth);
+  const user: User | null = firebaseUser
+    ?{
+      uid: firebaseUser.uid,
+      name: firebaseUser.displayName || 'Usuário',
+      profileImageUrl: firebaseUser.photoURL || '/default-avatar.jpg',
+      email: firebaseUser.email || '',
+      createdAt: null,
+    }
+    : null;
+    
+  const {liked, likesCount, toggleLike} = usePostLikes(post, user ?? null);
   const router = useRouter(); // Garantimos que a data e o resumo existam
   const excerpt = post.excerpt;
   // Usa o nome e a URL de perfil do usuário, com um fallback
   const authorName = post.user?.name || 'Autor Desconhecido';
   const authorImage = post.user?.profileImageUrl || '/default-avatar.jpg';
   const createdAt = post.createdAt;
-
-  // Verificar se o usuário já curtiu o post
-  useEffect(() => {
-    if (user && post.id) {
-      const checkLike = async () => {
-        const likeRef = doc(db, `posts/${post.id}/likes/${user.uid}`);
-        const likeSnap = await getDoc(likeRef);
-        setLiked(likeSnap.exists());
-      };
-      checkLike();
-    }
-  }, [user, post.id]);
 
   const handleAuthorClick = () => {
     if (post.authorUID) {
@@ -55,30 +41,6 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   // Função para toggle like
-  const handleLike = async () => {
-    if (!user) {
-      toast.error('Você precisa estar logado para curtir');
-      return;
-    }
-    const postRef = doc(db, 'posts', post.id);
-    const likeRef = doc(db, `posts/${post.id}/likes/${user.uid}`);
-
-    if (liked) {
-      // Descurtir
-      await deleteDoc(likeRef);
-      await updateDoc(postRef, { likesCount: increment(-1) });
-      setLiked(false);
-      setLikesCount((prev) => prev - 1);
-      toast.success('Like removido');
-    } else {
-      // Curtir
-      await setDoc(likeRef, { likedAt: serverTimestamp() });
-      await updateDoc(postRef, { likesCount: increment(1) });
-      setLiked(true);
-      setLikesCount((prev) => prev + 1);
-      toast.success('Post curtido');
-    }
-  };
 
   return (
     <div className={styles.card}>
@@ -125,7 +87,7 @@ export default function PostCard({ post }: PostCardProps) {
 
       <div className={styles.interations}>
         <span
-          onClick={handleLike}
+          onClick={toggleLike}
           style={{ cursor: user ? 'pointer' : 'not-allowed' }}
         >
           <Heart

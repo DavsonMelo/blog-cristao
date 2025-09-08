@@ -4,15 +4,9 @@ import { useEffect, useState } from 'react';
 import {
   doc,
   getDoc,
-  setDoc,
-  deleteDoc,
   runTransaction,
   serverTimestamp,
-  onSnapshot,
   increment,
-  collection,
-  query,
-  updateDoc,
 } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
@@ -24,16 +18,8 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
-
-interface Comment {
-  id: string;
-  content: string;
-  authorUID: string;
-  authorName: string;
-  createdAt: string | null;
-  likesCount: number;
-  likedByUser: boolean;
-}
+import { usePostLikes } from '@/hooks/usePostLikes';
+import { useComments } from '@/hooks/useComments';
 
 interface PostDetailClientProps {
   initialPost: PostWithUser;
@@ -44,17 +30,25 @@ export default function PostDetailClient({
   initialPost,
   postId,
 }: PostDetailClientProps) {
+  const [firebaseUser] = useAuthState(auth);
+  const user: User | null = firebaseUser
+    ? {
+        uid: firebaseUser.uid,
+        name: firebaseUser.displayName || 'Usuário',
+        profileImageUrl: firebaseUser.photoURL || '/default-avatar.jpg',
+        email: firebaseUser.email || '',
+        createdAt: null,
+      }
+    : null;
+
+  const { liked, likesCount, toggleLike } = usePostLikes(initialPost, user ?? null);
+  const { comments, toggleCommentLike, addComment } = useComments(postId, user);
+
   const [post, setPost] = useState<PostWithUser | null>(initialPost);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [user, loadingUser] = useAuthState(auth);
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(initialPost.likesCount || 0);
-  const [commentsCount, setCommentsCount] = useState(
-    initialPost.commentsCount || 0
-  );
+  const [puser, loadingUser] = useAuthState(auth);
   const [comment, setComment] = useState('');
-  const [comments, setComments] = useState<Comment[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -65,151 +59,63 @@ export default function PostDetailClient({
     }
 
     const postRef = doc(db, 'posts', postId);
-    const unsubscribePost = onSnapshot(
-      postRef,
-      async (postSnap) => {
-        if (!postSnap.exists()) {
-          setError('Post não encontrado');
-          setLoading(false);
-          return;
-        }
+    getDoc(postRef).then(async (postSnap) => {
+      if (!postSnap.exists()) {
+        setError('Post não encontrado');
+        setLoading(false);
+        return;
+      }
 
-        const postData = postSnap.data() as PostWithUser;
-        const userRef = doc(db, 'users', postData.authorUID);
-        const userSnap = await getDoc(userRef);
-        let userData: User | undefined;
-        if (userSnap.exists()) {
-          const rawUserData = userSnap.data() as User;
-          // Converter createdAt do userData para string ISO de forma segura
-          let userCreatedAt: string | null = null;
-          if (rawUserData.createdAt) {
-            if (typeof rawUserData.createdAt === 'string') {
-              userCreatedAt = rawUserData.createdAt;
-            } else if (
-              rawUserData.createdAt &&
-              typeof rawUserData.createdAt === 'object' &&
-              'toDate' in rawUserData.createdAt
-            ) {
-              userCreatedAt = (rawUserData.createdAt as Timestamp)
-                .toDate()
-                .toISOString();
-            }
-          }
-          userData = { ...rawUserData, createdAt: userCreatedAt };
-        }
+      const postData = postSnap.data() as PostWithUser;
+      const userRef = doc(db, 'users', postData.authorUID);
+      const userSnap = await getDoc(userRef);
+      let userData: User | undefined;
 
-        // Converter createdAt do postData para string ISO de forma segura
-        let createdAt: string | null = null;
-        if (postData.createdAt) {
-          if (typeof postData.createdAt === 'string') {
-            createdAt = postData.createdAt;
+      if (userSnap.exists()) {
+        const rawUserData = userSnap.data() as User;
+        let userCreatedAt: string | null = null;
+
+        if (rawUserData.createdAt) {
+          if (typeof rawUserData.createdAt === 'string') {
+            userCreatedAt = rawUserData.createdAt;
           } else if (
-            postData.createdAt &&
-            typeof postData.createdAt === 'object' &&
-            'toDate' in postData.createdAt
+            rawUserData.createdAt &&
+            typeof rawUserData.createdAt === 'object' &&
+            'toDate' in rawUserData.createdAt
           ) {
-            createdAt = (postData.createdAt as Timestamp)
+            userCreatedAt = (rawUserData.createdAt as Timestamp)
               .toDate()
               .toISOString();
           }
         }
 
-        setPost({
-          ...postData,
-          id: postSnap.id,
-          createdAt,
-          user: userData,
-        });
-        setLikesCount(postData.likesCount || 0);
-        setCommentsCount(postData.commentsCount || 0);
-        if (user) {
-          const likeRef = doc(db, `posts/${postId}/likes/${user.uid}`);
-          const likeSnap = await getDoc(likeRef);
-          setLiked(likeSnap.exists());
-        }
-        setLoading(false);
-      },
-      (err) => {
-        setError('Erro ao carregar post');
-        setLoading(false);
+        userData = { ...rawUserData, createdAt: userCreatedAt };
       }
-    );
 
-    const commentsRef = collection(db, `posts/${postId}/comments`);
-    const commentsQuery = query(commentsRef);
-    const unsubscribeComments = onSnapshot(commentsQuery, async (snapshot) => {
-      const commentsData = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        let createdAt: string | null = null;
-        if (data.createdAt) {
-          if (typeof data.createdAt === 'string') {
-            createdAt = data.createdAt;
-          } else if (
-            data.createdAt &&
-            typeof data.createdAt === 'object' &&
-            'toDate' in data.createdAt
-          ) {
-            createdAt = (data.createdAt as Timestamp).toDate().toISOString();
-          }
+      let createdAt: string | null = null;
+      if (postData.createdAt) {
+        if (typeof postData.createdAt === 'string') {
+          createdAt = postData.createdAt;
+        } else if (
+          postData.createdAt &&
+          typeof postData.createdAt === 'object' &&
+          'toDate' in postData.createdAt
+        ) {
+          createdAt = (postData.createdAt as Timestamp).toDate().toISOString();
         }
-        return {
-          id: doc.id,
-          ...data,
-          createdAt,
-          likedByUser: false,
-        };
-      }) as Comment[];
-
-      if (user) {
-        const updatedComments = await Promise.all(
-          commentsData.map(async (comment) => {
-            const likeRef = doc(
-              db,
-              `posts/${postId}/comments/${comment.id}/likes/${user.uid}`
-            );
-            const likeSnap = await getDoc(likeRef);
-            return { ...comment, likedByUser: likeSnap.exists() };
-          })
-        );
-        setComments(updatedComments);
-      } else {
-        setComments(commentsData);
       }
-    });
 
-    return () => {
-      unsubscribePost();
-      unsubscribeComments();
-    };
-  }, [postId, user]);
-
-  const handleLike = async () => {
-    if (!user) {
-      toast.error('Você precisa estar logado para curtir');
-      return;
-    }
-    if (loadingUser) return;
-
-    const postRef = doc(db, 'posts', postId);
-    const likeRef = doc(db, `posts/${postId}/likes/${user.uid}`);
-
-    try {
-      await runTransaction(db, async (transaction) => {
-        if (liked) {
-          transaction.delete(likeRef);
-          transaction.update(postRef, { likesCount: increment(-1) });
-        } else {
-          transaction.set(likeRef, { likedAt: serverTimestamp() });
-          transaction.update(postRef, { likesCount: increment(1) });
-        }
+      setPost({
+        ...postData,
+        id: postSnap.id,
+        createdAt,
+        user: userData,
       });
-      setLiked(!liked);
-      setLikesCount((prev) => (liked ? Math.max(0, prev - 1) : prev + 1));
-      toast.success(liked ? 'Like removido' : 'Post curtido');
-    } catch (error) {
-      toast.error('Erro ao processar like');
-    }
-  };
+
+      setLoading(false);
+    });
+  }, [postId]);
+
 
   const handleAuthorClick = () => {
     if (post?.authorUID) {
@@ -218,70 +124,16 @@ export default function PostDetailClient({
   };
 
   const handleCommentSubmit = async () => {
-    if (!user) {
-      toast.error('Você precisa estar logado para comentar');
-      return;
-    }
     if (!comment.trim()) {
       toast.error('O comentário não pode estar vazio');
       return;
     }
     try {
-      const commentRef = doc(collection(db, `posts/${postId}/comments`));
-      const postRef = doc(db, 'posts', postId);
-      await setDoc(commentRef, {
-        content: comment,
-        authorUID: user.uid,
-        authorName: user.displayName || 'Usuário',
-        createdAt: serverTimestamp(),
-        likesCount: 0,
-      });
-      await updateDoc(postRef, { commentsCount: increment(1) });
+      await addComment(comment);
       setComment('');
       toast.success('Comentário enviado');
     } catch (error) {
-      console.error('Erro ao enviar comentário:', error);
       toast.error('Erro ao enviar comentário');
-    }
-  };
-
-  const handleCommentLike = async (commentId: string, isLiked: boolean) => {
-    if (!user) {
-      toast.error('Você precisa estar logado para curtir');
-      return;
-    }
-    if (loadingUser) return;
-
-    const commentRef = doc(db, `posts/${postId}/comments/${commentId}`);
-    const likeRef = doc(
-      db,
-      `posts/${postId}/comments/${commentId}/likes/${user.uid}`
-    );
-
-    try {
-      await runTransaction(db, async (transaction) => {
-        if (isLiked) {
-          transaction.delete(likeRef);
-          transaction.update(commentRef, { likesCount: increment(-1) });
-        } else {
-          transaction.set(likeRef, { likedAt: serverTimestamp() });
-          transaction.update(commentRef, { likesCount: increment(1) });
-        }
-      });
-      setComments((prev) =>
-        prev.map((c) =>
-          c.id === commentId
-            ? {
-                ...c,
-                likedByUser: !isLiked,
-                likesCount: isLiked ? c.likesCount - 1 : c.likesCount + 1,
-              }
-            : c
-        )
-      );
-      toast.success(isLiked ? 'Like removido' : 'Comentário curtido');
-    } catch (error) {
-      toast.error('Erro ao processar like');
     }
   };
 
@@ -292,19 +144,8 @@ export default function PostDetailClient({
     }
     const url = `${window.location.origin}/posts/${postId}`;
     const text = `Confira este post: ${post?.title || 'Post'} - ${url}`;
-
-    // Texto formatado
-    const shareText =
-      `🌟 *${post?.title || 'Post'}* 🌟\n\n` +
-      `${post?.excerpt || 'Confira este post inspirador!'}\n\n` +
-      `🔗 ${url}\n\n` +
-      `_Compartilhado do Blog Cristão_`;
-
     const encodedText = encodeURIComponent(text);
-
-    // URL do WhatsApp
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
-
     window.open(whatsappUrl, '_blank');
   };
 
@@ -355,7 +196,7 @@ export default function PostDetailClient({
         <p className={styles.content}>{post.content}</p>
         <div className={styles.interations}>
           <span
-            onClick={handleLike}
+            onClick={toggleLike}
             style={{ cursor: user && !loadingUser ? 'pointer' : 'not-allowed' }}
           >
             <Heart
@@ -365,8 +206,8 @@ export default function PostDetailClient({
             />
             {likesCount}
           </span>
-          <span>
-            <MessageSquare size={18} /> {commentsCount}
+          <span style={{ cursor: 'not-allowed' }}>
+            <MessageSquare size={18} /> {comments.length}
           </span>
           <span
             onClick={handleShare}
@@ -412,7 +253,7 @@ export default function PostDetailClient({
                 <p className={styles.commentContent}>{comment.content}</p>
                 <span
                   onClick={() =>
-                    handleCommentLike(comment.id, comment.likedByUser)
+                    toggleCommentLike(comment.id, comment.likedByUser)
                   }
                   className={styles.commentLike}
                 >
