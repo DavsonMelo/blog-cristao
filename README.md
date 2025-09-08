@@ -1,40 +1,5 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 # blog-cristao
+
 # ❤️ Blog Cristão — README
 
 > Um blog simples, com alma e propósito: mensagens espirituais com imagens marcantes.
@@ -45,11 +10,11 @@ Este repositório é a base do **Blog Cristão** — um site feito com Next.js (
 
 # 📌 Visão geral
 
-* **Frontend:** Next.js 13+ (App Router), React (componentes client-side onde necessário).
-* **Autenticação:** Firebase Authentication (Client SDK) + Session Cookies via Firebase Admin (para SSR e proteção de APIs).
-* **Banco de dados:** Firestore (posts, users, comentários, likes).
-* **Uploads:** Cloudinary (rota server-side `api/upload`) — usado para hospedar imagens finais.
-* **Outros:** `react-toastify` para feedback, `date-fns` para datas, e hooks customizados para auto-save de rascunhos.
+- **Frontend:** Next.js 13+ (App Router), React (componentes client-side onde necessário).
+- **Autenticação:** Firebase Authentication (Client SDK) + Session Cookies via Firebase Admin (para SSR e proteção de APIs).
+- **Banco de dados:** Firestore (posts, users, comentários, likes).
+- **Uploads:** Cloudinary (rota server-side `api/upload`) — usado para hospedar imagens finais.
+- **Outros:** `react-toastify` para feedback, `date-fns` para datas, e hooks customizados para auto-save de rascunhos.
 
 ---
 
@@ -61,22 +26,22 @@ Criar um espaço simples e elegante para compartilhar mensagens espirituais curt
 
 # 🎯 Principais funcionalidades
 
-* Cadastro/login (email, Google, GitHub)
-* Sessão persistente via cookie (`/api/sessionLogin` / `sessionLogout`)
-* Criação de posts com imagem obrigatória e preview de rascunho
-* Lista de posts com paginação
-* Detalhe do post com comentários e likes (transações no Firestore)
-* Uploads tratados por rota server-side (Cloudinary)
+- Cadastro/login (email, Google, GitHub)
+- Sessão persistente via cookie (`/api/sessionLogin` / `sessionLogout`)
+- Criação de posts com imagem obrigatória e preview de rascunho
+- Lista de posts com paginação
+- Detalhe do post com comentários e likes (transações no Firestore)
+- Uploads tratados por rota server-side (Cloudinary)
 
 ---
 
 # 🧭 Arquitetura (resumida)
 
-* `app/` → Next.js App Router (páginas, componentes e API routes)
-* `app/components/` → componentes reutilizáveis (Header, AuthModal, PostList, etc.)
-* `app/context/` → contextos React (DraftPost e Auth disponível)
-* `app/api/` → rotas de backend (`sessionLogin`, `sessionLogout`, `upload`)
-* `lib/` → configurações do Firebase (client e admin) e tipos
+- `app/` → Next.js App Router (páginas, componentes e API routes)
+- `app/components/` → componentes reutilizáveis (Header, AuthModal, PostList, etc.)
+- `app/context/` → contextos React (DraftPost e Auth disponível)
+- `app/api/` → rotas de backend (`sessionLogin`, `sessionLogout`, `upload`)
+- `lib/` → configurações do Firebase (client e admin) e tipos
 
 ---
 
@@ -144,9 +109,9 @@ NODE_ENV=development
 
 # 🧩 Boas práticas e dicas rápidas
 
-* **Imagem obrigatória:** Todos os posts exigem imagem. O preview usa `URL.createObjectURL` (blob) — por isso o preview deve usar `<img>` nativo. Imagens finais (salvas no Cloudinary) devem ser renderizadas com `next/image`.
-* **Sessões:** Mantenha a criação e a remoção do cookie no fluxo de login/logout para garantir SSR seguro.
-* **Listeners:** Evite espalhar `onAuthStateChanged` em múltiplos componentes; prefira um ponto central (AuthProvider) se decidir padronizar.
+- **Imagem obrigatória:** Todos os posts exigem imagem. O preview usa `URL.createObjectURL` (blob) — por isso o preview deve usar `<img>` nativo. Imagens finais (salvas no Cloudinary) devem ser renderizadas com `next/image`.
+- **Sessões:** Mantenha a criação e a remoção do cookie no fluxo de login/logout para garantir SSR seguro.
+- **Listeners:** Evite espalhar `onAuthStateChanged` em múltiplos componentes; prefira um ponto central (AuthProvider) se decidir padronizar.
 
 ---
 
@@ -156,48 +121,47 @@ NODE_ENV=development
 
 ## 📌 Autenticação & Sessão
 
-* [ ] Unificar lógica de autenticação (Firebase Auth + Session Cookie API)
-* [ ] Criar hook `useAuth()` para centralizar login, logout e estado do usuário
-* [ ] Garantir expiração e renovação de sessões no backend
-* [ ] Bloquear rotas privadas via middleware
+- [ ] Unificar lógica de autenticação (Firebase Auth + Session Cookie API)
+- [ ] Criar hook `useAuth()` para centralizar login, logout e estado do usuário
+- [ ] Garantir expiração e renovação de sessões no backend
+- [ ] Bloquear rotas privadas via middleware
 
 ## 🖼️ Posts & Imagens
 
-* [ ] Tornar **imagem obrigatória** na criação de posts
-* [ ] Substituir `<img>` por `next/image` (com fallback para preview local)
-* [ ] Resolver problema de preview com `URL.createObjectURL` (revogar URLs no `useEffect`)
-* [ ] Validar formatos e tamanho de imagem antes do upload
-* [ ] Criar UI de erro para upload falho
+- [ ] Tornar **imagem obrigatória** na criação de posts
+- [ ] Substituir `<img>` por `next/image` (com fallback para preview local)
+- [ ] Resolver problema de preview com `URL.createObjectURL` (revogar URLs no `useEffect`)
+- [ ] Validar formatos e tamanho de imagem antes do upload
+- [ ] Criar UI de erro para upload falho
 
 ## 📝 PostList & Performance
 
-* [ ] Evitar consultas duplicadas de usuários no `PostList`
-* [ ] Implementar **skeleton loaders** enquanto posts carregam
-* [ ] Migrar "Carregar mais" para **infinite scroll**
-* [ ] Cachear autores já buscados para reduzir leituras no Firestore
-* [ ] Tratar casos em que `createdAt` não existe ou está corrompido
+- [ ] Evitar consultas duplicadas de usuários no `PostList`
+- [ ] Implementar **skeleton loaders** enquanto posts carregam
+- [ ] Migrar "Carregar mais" para **infinite scroll**
+- [ ] Cachear autores já buscados para reduzir leituras no Firestore
+- [ ] Tratar casos em que `createdAt` não existe ou está corrompido
 
 ## 🎨 UI/UX
 
-* [ ] Padronizar botões (usar componentes reutilizáveis)
-* [ ] Melhorar modal de login (`AuthModal`) com animações suaves
-* [ ] Adicionar feedback visual (toasts) para login/logout e posts criados
-* [ ] Criar layout responsivo para mobile (grid de posts adaptável)
+- [ ] Padronizar botões (usar componentes reutilizáveis)
+- [ ] Melhorar modal de login (`AuthModal`) com animações suaves
+- [ ] Adicionar feedback visual (toasts) para login/logout e posts criados
+- [ ] Criar layout responsivo para mobile (grid de posts adaptável)
 
 ## ⚙️ Infraestrutura
 
-* [ ] Criar logger centralizado para erros (ex: hook ou serviço)
-* [ ] Configurar variáveis de ambiente com validação (Zod ou similar)
-* [ ] Configurar ESLint + Prettier no projeto
-* [ ] Implementar testes básicos de integração (Jest + React Testing Library)
-* [ ] Habilitar segurança extra nos cookies (SameSite, Secure)
+- [ ] Criar logger centralizado para erros (ex: hook ou serviço)
+- [ ] Configurar variáveis de ambiente com validação (Zod ou similar)
+- [ ] Configurar ESLint + Prettier no projeto
+- [ ] Implementar testes básicos de integração (Jest + React Testing Library)
+- [ ] Habilitar segurança extra nos cookies (SameSite, Secure)
 
 ## 🌟 Extras Futuro
 
-* [ ] Curtidas e comentários em tempo real
-* [ ] Notificações in-app para interações
-* [ ] Painel de administração para moderar posts
-* [ ] Internacionalização (i18n) para outros idiomas
+- [ ] Curtidas e comentários em tempo real
+- [ ] Notificações in-app para interações
+- [ ] Painel de administração para moderar posts
+- [ ] Internacionalização (i18n) para outros idiomas
 
 ---
-
