@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { auth, db } from '@/lib/firebase';
 import {
   signInWithEmailAndPassword,
@@ -17,11 +17,21 @@ import { User } from '@/lib/types';
 
 interface AuthModalProps {
   redirect?: string; // opcional, padrão '/'
+  onClose?: () => void; // opcional
 }
 
-export default function AuthModal({ redirect }: AuthModalProps) {
+export default function AuthModal({ redirect, onClose }: AuthModalProps) {
   const router = useRouter();
-  const redirectTo = redirect || '/';
+  const [currentPath, setCurrentPath] = useState('/');
+
+  // Captura a URL atual quando o modal é aberto
+  useEffect(() => {
+    setCurrentPath(window.location.pathname);
+  }, []);
+
+  const redirectTo = redirect || currentPath;
+
+  const handleRedirect = () => router.push(redirectTo);
 
   const [view, setView] = useState<'default' | 'createAccount' | 'login'>(
     'default'
@@ -62,7 +72,16 @@ export default function AuthModal({ redirect }: AuthModalProps) {
     });
   };
 
-  const handleRedirect = () => router.push(redirectTo);
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,10 +135,24 @@ export default function AuthModal({ redirect }: AuthModalProps) {
     }
   };
 
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      handleRedirect(); // fallback
+    }
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} onClick={handleOverlayClick}>
       <div className={styles.modal}>
-        <button className={styles.close} onClick={handleRedirect}>
+        <button className={styles.close} onClick={handleClose}>
           <X />
         </button>
 

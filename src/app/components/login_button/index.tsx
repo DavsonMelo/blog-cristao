@@ -1,12 +1,16 @@
 'use client';
 // libs externas
 import { useState } from 'react';
-import { LogIn } from "lucide-react";
+import { LogIn } from 'lucide-react';
 // libs e codigos internos
-import AuthModal from "../auth_modal";
+import AuthModal from '../auth_modal';
 
 export default function LoginButton() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   return (
     <>
@@ -24,7 +28,7 @@ export default function LoginButton() {
       >
         <LogIn />
       </button>
-      {open && <AuthModal />}
+      {open && <AuthModal onClose={handleClose} />}
     </>
   );
 }

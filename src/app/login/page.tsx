@@ -2,10 +2,14 @@
 'use client';
 
 import AuthModal from '@/app/components/auth_modal';
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  // Define pra onde redirecionar após login/cadastro
-  const redirectTo = '/posts/create'; // ou qualquer outra página padrão
+  const router = useRouter();
 
-  return <AuthModal redirect={redirectTo} />;
+  const handleClose = () => {
+    router.push("/"); // ou router.push('/') para ir para home
+  };
+
+  return <AuthModal redirect="posts/create" onClose={handleClose} />;
 }
