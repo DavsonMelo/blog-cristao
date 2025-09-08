@@ -164,4 +164,12 @@ NODE_ENV=development
 - [ ] Painel de administração para moderar posts
 - [ ] Internacionalização (i18n) para outros idiomas
 
----
+## 📝 Minhas anotações
+
+- [ ] Implementar share direto no post_card.
+- [ ] Implementar compartilhamento no Insta e no X, alem do Whatsapp
+- [ ] Criar nova Branch para fazer todas essas alterações.
+- [ ] simplificar login e logout no mesmo espaço na header. um click -> mensagem -> ok
+- [ ] Modificar o conteudo e a forma de funcionar no Hamburger.
+
+-------------------------------------------------------------------------------------
