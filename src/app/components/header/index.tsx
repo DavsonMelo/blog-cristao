@@ -11,11 +11,12 @@ import LoginButton from '@/app/components/login_button/index';
 import styles from './styles.module.scss';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import NavItem from '../nav_itens/NavItens';
 
 const greatVibes = Great_Vibes({
-    weight: '400',
-    subsets: ['latin'],
-  });
+  weight: '400',
+  subsets: ['latin'],
+});
 
 const handleLogout = async () => {
   try {
@@ -85,73 +86,80 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.container}>
+        {/* Logo */}
         <div className={styles.logo}>
           <button
             className={`${styles.logoLink} ${greatVibes.className}`}
-            onClick={() => { router.push('/'), setMenuOpen(false) }}
+            onClick={() => {
+              router.push('/');
+              setMenuOpen(false);
+            }}
           >
             ❤️ Blog Cristão <span>❤️</span>
           </button>
         </div>
+
+        {/* Links desktop */}
         <div className={styles.desktopNav}>
-          <Link href="/" className={styles.link}>
-            Home
-          </Link>
-          <Link href="/about" className={styles.link}>
-            Sobre
-          </Link>
+          <NavItem label="Home" href="/" />
+          <NavItem label="Sobre" href="/about" />
+          {user && pathname === '/' && (
+            <>
+              <NavItem
+                label="Criar post"
+                onClick={() => {
+                  handlePrefetch()
+                  localStorage.removeItem('postDraft');
+                  router.push('/posts/create');
+                  setMenuOpen(false);
+                }}
+              />
+              <NavItem
+                label="Editar posts"
+                onClick={() => {
+                  router.push('/posts/edit');
+                  setMenuOpen(false);
+                }}
+              />
+            </>
+          )}
+          {user && <NavItem label="Sair" onClick={handleLogout} />}
         </div>
+
+        {/* Mobile nav */}
         <nav className={`${styles.nav} ${menuOpen ? styles.open : ''}`}>
           <div className={styles.mobileNavLinks}>
-            <Link
-              href="/"
-              className={styles.link}
-              onClick={() => setMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
+            <NavItem label="Home" href="/" onClick={() => setMenuOpen(false)} />
+            <NavItem
+              label="Sobre"
               href="/about"
-              className={styles.link}
               onClick={() => setMenuOpen(false)}
-            >
-              Sobre
-            </Link>
+            />
+            {user && pathname === '/' && (
+              <>
+                <NavItem
+                  label="Criar post"
+                  onClick={() => {
+                    handlePrefetch()
+                    localStorage.removeItem('postDraft');
+                    router.push('/posts/create');
+                    setMenuOpen(false);
+                  }}
+                />
+                <NavItem
+                  label="Editar posts"
+                  onClick={() => {
+                    router.push('/posts/edit');
+                    setMenuOpen(false);
+                  }}
+                />
+              </>
+            )}
+            {user && <NavItem label="Sair" onClick={handleLogout} />}
           </div>
-          {user && (
-            <div className={styles.userMenuContent}>
-              {pathname === '/' && (
-                <>
-                  <button
-                    className={styles.createPost}
-                    onClick={() => {
-                      localStorage.removeItem('postDraft');
-                      router.push('/posts/create');
-                      setMenuOpen(false);
-                    }}
-                    onMouseEnter={handlePrefetch} // desktop hover
-                    onFocus={handlePrefetch} // foco por teclado
-                    onTouchStart={handlePrefetch} // mobile touch
-                  >
-                    Criar post
-                  </button>
-                  <button
-                    className={styles.editPost}
-                    onClick={() => {
-                      router.push('/posts/edit');
-                      setMenuOpen(false);
-                    }}
-                  >
-                    Editar posts
-                  </button>
-                </>
-              )}
-              <button className={styles.out} onClick={handleLogout}>
-                Sair
-              </button>
-            </div>
-          )}
         </nav>
+
+        {/* User actions */}
         <div className={styles.userActions}>
           <ThemeToggleButton />
           {!user ? (
@@ -164,7 +172,7 @@ export default function Header() {
                 alt="avatar"
                 width={40}
                 height={40}
-                priority={true}
+                priority
               />
               <span className={styles.username}>{firstName}</span>
             </div>

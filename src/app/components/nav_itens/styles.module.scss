@@ -1,0 +1,31 @@
+.link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 17px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-color);
+  padding: 0;
+  text-align: left;
+  position: relative;
+
+  &:hover {
+    color: #0070f3; // muda cor do texto
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 0;
+    height: 2px;
+    background-color: #0070f3;
+    transition: width 0.3s ease;
+  }
+
+  &:hover::after {
+    width: 100%;
+  }
+}
