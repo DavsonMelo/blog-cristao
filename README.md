@@ -168,8 +168,8 @@ NODE_ENV=development
 
 - [ ] Implementar share direto no post_card.
 - [ ] Implementar compartilhamento no Insta e no X, alem do Whatsapp
-- [ ] Criar nova Branch para fazer todas essas alterações.
-- [ ] simplificar login e logout no mesmo espaço na header. um click -> mensagem -> ok
-- [ ] Modificar o conteudo e a forma de funcionar no Hamburger.
+- [x] Criar nova Branch para fazer todas essas alterações.
+- [x] simplificar login e logout no mesmo espaço na header. um click -> mensagem -> ok
+- [x] Modificar o conteudo e a forma de funcionar no Hamburger.
 
--------------------------------------------------------------------------------------
+---

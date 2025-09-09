@@ -8,25 +8,27 @@ import type { PostWithUser, User } from '@/lib/types';
 import { Heart, MessageSquare, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { usePostLikes } from "@/hooks/usePostLikes";
+import { usePostLikes } from '@/hooks/usePostLikes';
+import { useShare } from '@/app/context/ShareContext';
 
 interface PostCardProps {
   post: PostWithUser;
 }
 
 export default function PostCard({ post }: PostCardProps) {
+  const { openShare } = useShare();
   const [firebaseUser] = useAuthState(auth);
   const user: User | null = firebaseUser
-    ?{
-      uid: firebaseUser.uid,
-      name: firebaseUser.displayName || 'Usuário',
-      profileImageUrl: firebaseUser.photoURL || '/default-avatar.jpg',
-      email: firebaseUser.email || '',
-      createdAt: null,
-    }
+    ? {
+        uid: firebaseUser.uid,
+        name: firebaseUser.displayName || 'Usuário',
+        profileImageUrl: firebaseUser.photoURL || '/default-avatar.jpg',
+        email: firebaseUser.email || '',
+        createdAt: null,
+      }
     : null;
-    
-  const {liked, likesCount, toggleLike} = usePostLikes(post, user ?? null);
+
+  const { liked, likesCount, toggleLike } = usePostLikes(post, user ?? null);
   const router = useRouter(); // Garantimos que a data e o resumo existam
   const excerpt = post.excerpt;
   // Usa o nome e a URL de perfil do usuário, com um fallback
@@ -105,7 +107,7 @@ export default function PostCard({ post }: PostCardProps) {
           />{' '}
           {post.commentsCount || 0}
         </span>
-        <span>
+        <span onClick={() => openShare(post)} style={{ cursor: 'pointer' }}>
           <Share2 size={18} />
         </span>
       </div>
