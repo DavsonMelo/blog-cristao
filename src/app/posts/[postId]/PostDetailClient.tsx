@@ -13,14 +13,13 @@ import { auth, db } from '@/lib/firebase';
 import { toast } from 'react-toastify';
 import { PostWithUser, User } from '@/lib/types';
 import styles from './styles.module.scss';
-import { Heart, MessageSquare, Share2, Send } from 'lucide-react';
+import { Heart, MessageSquare, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 import { usePostLikes } from '@/hooks/usePostLikes';
 import { useComments } from '@/hooks/useComments';
-import ShareModal from '@/app/components/share_modal';
 
 interface PostDetailClientProps {
   initialPost: PostWithUser;
