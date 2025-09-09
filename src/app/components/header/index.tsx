@@ -10,7 +10,6 @@ import ThemeToggleButton from '@/app/components/theme_button/index';
 import LoginButton from '@/app/components/login_button/index';
 import styles from './styles.module.scss';
 import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
 import NavItem from '../nav_itens/NavItens';
 
 const greatVibes = Great_Vibes({

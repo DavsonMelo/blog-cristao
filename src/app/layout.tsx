@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import { ThemeProvider } from './context';
 import { Poppins, Inter } from 'next/font/google';
 import { DraftPostProvider } from './context/DraftPostContext';
+import { ShareProvider } from '@/app/context/ShareContext';
 
 import './globals.scss';
 import Header from './components/header';
-import { ToastContainer } from "react-toastify";
+import { ToastContainer } from 'react-toastify';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -30,9 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br" 
-    suppressHydrationWarning
-    className={`${poppins.variable} ${inter.variable}`}>
+    <html
+      lang="pt-br"
+      suppressHydrationWarning
+      className={`${poppins.variable} ${inter.variable}`}
+    >
       <head>
         {/* Script para evitar o flash de tema errado */}
         <script
@@ -48,14 +51,16 @@ export default function RootLayout({
         />
       </head>
       <body>
-         <ThemeProvider>{/* providencia o tema escolhido pelo usuario e armazena as mudanças */}
-          <DraftPostProvider>{/* Esse código implementa um Context API no React para gerenciar o estado de um rascunho de post (com título, conteúdo, autor etc.). */}
-            <Header />{/* header da aplicação. Vai em todas as pages */}
-            <main
-             style={{ paddingTop: '60px' }}> 
-              {children}
+        <ThemeProvider>
+          {/* providencia o tema escolhido pelo usuario e armazena as mudanças */}
+          <DraftPostProvider>
+            {/* Esse código implementa um Context API no React para gerenciar o estado de um rascunho de post (com título, conteúdo, autor etc.). */}
+            <Header />
+            {/* header da aplicação. Vai em todas as pages */}
+            <main style={{ paddingTop: '60px' }}>
+              <ShareProvider>{children}</ShareProvider>
               <ToastContainer />
-              </main>
+            </main>
           </DraftPostProvider>
         </ThemeProvider>
       </body>
