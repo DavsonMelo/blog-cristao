@@ -166,10 +166,11 @@ NODE_ENV=development
 
 ## 📝 Minhas anotações
 
-- [ ] Implementar share direto no post_card.
-- [ ] Implementar compartilhamento no Insta e no X, alem do Whatsapp
+- [x] Implementar share direto no post_card.
+- [ ] Implementar compartilhamento no Insta e no X, alem do Whatsapp e confirmar funcionalidade dos links
 - [x] Criar nova Branch para fazer todas essas alterações.
 - [x] simplificar login e logout no mesmo espaço na header. um click -> mensagem -> ok
 - [x] Modificar o conteudo e a forma de funcionar no Hamburger.
+- [x] Implementar o fechamento do modal Share, apos clicar em alguma rede.
 
 ---

@@ -20,6 +20,7 @@ import { ptBR } from 'date-fns/locale';
 import { Timestamp } from 'firebase/firestore';
 import { usePostLikes } from '@/hooks/usePostLikes';
 import { useComments } from '@/hooks/useComments';
+import ShareModal from '@/app/components/share_modal';
 
 interface PostDetailClientProps {
   initialPost: PostWithUser;
@@ -41,7 +42,10 @@ export default function PostDetailClient({
       }
     : null;
 
-  const { liked, likesCount, toggleLike } = usePostLikes(initialPost, user ?? null);
+  const { liked, likesCount, toggleLike } = usePostLikes(
+    initialPost,
+    user ?? null
+  );
   const { comments, toggleCommentLike, addComment } = useComments(postId, user);
 
   const [post, setPost] = useState<PostWithUser | null>(initialPost);
@@ -50,6 +54,7 @@ export default function PostDetailClient({
   const [puser, loadingUser] = useAuthState(auth);
   const [comment, setComment] = useState('');
   const router = useRouter();
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   useEffect(() => {
     if (!postId) {
@@ -116,7 +121,6 @@ export default function PostDetailClient({
     });
   }, [postId]);
 
-
   const handleAuthorClick = () => {
     if (post?.authorUID) {
       router.push(`/posts/author/${post.authorUID}`);
@@ -137,16 +141,48 @@ export default function PostDetailClient({
     }
   };
 
-  const handleShare = () => {
+  const handleShare = (
+    platform: 'whatsapp' | 'twitter' | 'facebook' | 'linkedin' | 'telegram'
+  ) => {
     if (!user) {
       toast.error('Você precisa estar logado para compartilhar');
       return;
     }
+
     const url = `${window.location.origin}/posts/${postId}`;
     const text = `Confira este post: ${post?.title || 'Post'} - ${url}`;
+    const encodedUrl = encodeURIComponent(url);
     const encodedText = encodeURIComponent(text);
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
-    window.open(whatsappUrl, '_blank');
+
+    let shareUrl = '';
+
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+        break;
+
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+        break;
+
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        break;
+
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        break;
+
+      case 'telegram':
+        shareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+        break;
+
+      default:
+        console.error('Plataforma não suportada:', platform);
+        return;
+    }
+
+    window.open(shareUrl, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) return <p className={styles.loading}>Carregando...</p>;
@@ -194,28 +230,61 @@ export default function PostDetailClient({
           </div>
         )}
         <p className={styles.content}>{post.content}</p>
+
         <div className={styles.interations}>
-          <span
-            onClick={toggleLike}
-            style={{ cursor: user && !loadingUser ? 'pointer' : 'not-allowed' }}
-          >
-            <Heart
-              size={18}
-              fill={liked ? 'red' : 'none'}
-              color={liked ? 'red' : 'currentColor'}
-            />
-            {likesCount}
-          </span>
-          <span style={{ cursor: 'not-allowed' }}>
-            <MessageSquare size={18} /> {comments.length}
-          </span>
-          <span
-            onClick={handleShare}
-            style={{ cursor: user && !loadingUser ? 'pointer' : 'not-allowed' }}
-          >
-            <Share2 size={18} />
-          </span>
+          <div className={styles.interactionButtons}>
+            <span
+              onClick={toggleLike}
+              style={{
+                cursor: user && !loadingUser ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <Heart
+                size={18}
+                fill={liked ? 'red' : 'none'}
+                color={liked ? 'red' : 'currentColor'}
+              />
+              {likesCount}
+            </span>
+            <span style={{ cursor: 'not-allowed' }}>
+              <MessageSquare size={18} /> {comments.length}
+            </span>
+          </div>
+          <h4>Compartilhar</h4>
+          <div className={styles.shareButtons}>
+            <button onClick={() => handleShare('whatsapp')}>
+              <img
+                src="/icons/whatsapp.svg"
+                alt="WhatsApp"
+              />
+            </button>
+            <button onClick={() => handleShare('twitter')}>
+              <img
+                src="/icons/twitter-x.svg"
+                alt="Twitter"
+              />
+            </button>
+            <button onClick={() => handleShare('facebook')}>
+              <img
+                src="/icons/facebook.svg"
+                alt="Facebook"
+              />
+            </button>
+            <button onClick={() => handleShare('linkedin')}>
+              <img
+                src="/icons/linkedin.svg"
+                alt="LinkedIn"
+              />
+            </button>
+            <button onClick={() => handleShare('telegram')}>
+              <img
+                src="/icons/telegram.svg"
+                alt="Telegram"
+              />
+            </button>
+          </div>
         </div>
+
         <div className={styles.comments}>
           <h2>Comentários</h2>
           <div className={styles.sendButton}>

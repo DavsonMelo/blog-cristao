@@ -5,7 +5,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import styles from './styles.module.scss';
 import { auth } from '@/lib/firebase';
 import type { PostWithUser, User } from '@/lib/types';
-import { Heart, MessageSquare, Share2 } from 'lucide-react';
+import { Heart, MessageSquare, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePostLikes } from '@/hooks/usePostLikes';
@@ -16,7 +16,6 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post }: PostCardProps) {
-  const { openShare } = useShare();
   const [firebaseUser] = useAuthState(auth);
   const user: User | null = firebaseUser
     ? {
@@ -33,7 +32,7 @@ export default function PostCard({ post }: PostCardProps) {
   const excerpt = post.excerpt;
   // Usa o nome e a URL de perfil do usuário, com um fallback
   const authorName = post.user?.name || 'Autor Desconhecido';
-  const authorImage = post.user?.profileImageUrl || '/default-avatar.jpg';
+  const authorImage = post.user?.profileImageUrl|| '/default-avatar.jpg';
   const createdAt = post.createdAt;
 
   const handleAuthorClick = () => {
@@ -107,8 +106,8 @@ export default function PostCard({ post }: PostCardProps) {
           />{' '}
           {post.commentsCount || 0}
         </span>
-        <span onClick={() => openShare(post)} style={{ cursor: 'pointer' }}>
-          <Share2 size={18} />
+        <span onClick={() => router.push(`/posts/${post.id}`)}>
+          <Eye size={18} />
         </span>
       </div>
     </div>
