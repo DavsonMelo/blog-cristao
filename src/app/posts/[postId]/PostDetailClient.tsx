@@ -149,7 +149,7 @@ export default function PostDetailClient({
     }
 
     const url = `${window.location.origin}/posts/${postId}`;
-    const text = `Confira este post: ${post?.title || 'Post'} - ${url}`;
+    const text = `Confira este post: ${post?.title || 'Post'}`;
     const encodedUrl = encodeURIComponent(url);
     const encodedText = encodeURIComponent(text);
 
