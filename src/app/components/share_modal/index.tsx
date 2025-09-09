@@ -11,30 +11,35 @@ interface ShareModalProps {
 }
 
 export default function ShareModal({ post, onClose }: ShareModalProps) {
-  const text = `Confira este post: ${post.title} - ${window.location.origin}/posts/${post.id}`;
+  // Garante que o post tenha ID definido
+  if (!post?.id) return null;
+
+  // URL do post já renderizado com meta tags OG no servidor
+  const postUrl = `${window.location.origin}/posts/${post.id}`;
+
+  // Texto para WhatsApp / Twitter (não altera o preview, só o texto inicial)
+  const text = `Confira este post: ${post.title || 'Post'} - ${postUrl}`;
+  const encodedText = encodeURIComponent(text);
 
   const shareOptions = [
     {
-      name: 'Whats',
-      url: `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
+      name: 'WhatsApp',
+      url: `https://api.whatsapp.com/send?text=${encodedText}`,
       icon: '/icons/whatsapp.svg',
     },
     {
       name: 'Twitter',
-      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
+      url: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodeURIComponent(
+        postUrl
+      )}`,
       icon: '/icons/twitter-x.svg',
     },
     {
       name: 'Facebook',
       url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-        text
+        postUrl
       )}`,
       icon: '/icons/facebook.svg',
-    },
-    {
-      name: 'Instagram',
-      url: `https://www.instagram.com/share?url=${encodeURIComponent(text)}`,
-      icon: '/icons/instagram.svg',
     },
   ];
 
@@ -49,14 +54,13 @@ export default function ShareModal({ post, onClose }: ShareModalProps) {
           {shareOptions.map((option) => (
             <button
               key={option.name}
-              onClick={() => window.open(option.url, '_blank')}
+              onClick={() => {
+                window.open(option.url, '_blank');
+                onClose(); // mantém o fechamento do modal
+              }}
               className={styles.option}
             >
-              <img
-                src={option.icon}
-                alt={option.name}
-                className={styles.icon}
-              />
+              <img src={option.icon} alt={option.name} className={styles.icon} />
               <span> {option.name}</span>
             </button>
           ))}
