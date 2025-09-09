@@ -252,34 +252,19 @@ export default function PostDetailClient({
           <h4>Compartilhar</h4>
           <div className={styles.shareButtons}>
             <button onClick={() => handleShare('whatsapp')}>
-              <img
-                src="/icons/whatsapp.svg"
-                alt="WhatsApp"
-              />
+              <img src="/icons/whatsapp.svg" alt="WhatsApp" />
             </button>
             <button onClick={() => handleShare('twitter')}>
-              <img
-                src="/icons/twitter-x.svg"
-                alt="Twitter"
-              />
+              <img src="/icons/twitter-x.svg" alt="Twitter" />
             </button>
             <button onClick={() => handleShare('facebook')}>
-              <img
-                src="/icons/facebook.svg"
-                alt="Facebook"
-              />
+              <img src="/icons/facebook.svg" alt="Facebook" />
             </button>
             <button onClick={() => handleShare('linkedin')}>
-              <img
-                src="/icons/linkedin.svg"
-                alt="LinkedIn"
-              />
+              <img src="/icons/linkedin.svg" alt="LinkedIn" />
             </button>
             <button onClick={() => handleShare('telegram')}>
-              <img
-                src="/icons/telegram.svg"
-                alt="Telegram"
-              />
+              <img src="/icons/telegram.svg" alt="Telegram" />
             </button>
           </div>
         </div>
