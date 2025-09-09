@@ -25,6 +25,14 @@ export async function generateMetadata({
     process.env.NEXT_PUBLIC_BASE_URL || 'https://blog-cristao.vercel.app/';
   const postUrl = `${baseUrl}/posts/${resolvedParams.postId}`;
 
+  
+  const imageUrl = postData.featuredImageUrl
+  ? postData.featuredImageUrl.startsWith('http')
+    ? postData.featuredImageUrl
+    : `${baseUrl}${postData.featuredImageUrl}`
+  : `${baseUrl}/default-og-image.jpg`;
+
+
   return {
     title: postData.title || 'Post sem título',
     description:
@@ -34,21 +42,12 @@ export async function generateMetadata({
       description:
         postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
       url: postUrl,
-      images: postData.featuredImageUrl
-        ? [
+      images: [
             {
-              url: postData.featuredImageUrl,
+              url: imageUrl,
               width: 800,
               height: 400,
               alt: postData.title || 'Imagem do post',
-            },
-          ]
-        : [
-            {
-              url: `${baseUrl}/default-og-image.jpg`,
-              width: 800,
-              height: 400,
-              alt: 'Blog Cristão',
             },
           ],
       type: 'article',
@@ -60,9 +59,7 @@ export async function generateMetadata({
       title: postData.title || 'Post sem título',
       description:
         postData.excerpt || 'Leia mais sobre este post no Blog Cristão!',
-      images: postData.featuredImageUrl
-        ? [postData.featuredImageUrl]
-        : [`${baseUrl}/default-og-image.jpg`],
+      images: [imageUrl],
     },
   };
 }
