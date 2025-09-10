@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { ThemeProvider } from './context';
 import { Poppins, Inter } from 'next/font/google';
 import { DraftPostProvider } from './context/DraftPostContext';
-import { ShareProvider } from '@/app/context/ShareContext';
 
 import './globals.scss';
 import Header from './components/header';
@@ -58,7 +57,7 @@ export default function RootLayout({
             <Header />
             {/* header da aplicação. Vai em todas as pages */}
             <main style={{ paddingTop: '60px' }}>
-              <ShareProvider>{children}</ShareProvider>
+              {children}
               <ToastContainer />
             </main>
           </DraftPostProvider>
