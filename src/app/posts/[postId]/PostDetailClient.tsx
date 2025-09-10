@@ -140,49 +140,55 @@ export default function PostDetailClient({
     }
   };
 
-  const handleShare = (
-    platform: 'whatsapp' | 'twitter' | 'facebook' | 'linkedin' | 'telegram'
-  ) => {
-    if (!user) {
-      toast.error('Você precisa estar logado para compartilhar');
+  const handleShare = (platform: string) => {
+  if (!post || !postId) {
+    console.error('Post ou postId não definidos');
+    return;
+  }
+
+  const postUrl = `${window.location.origin}/posts/${postId}`;
+
+  // Texto para WhatsApp/Telegram
+  const textWhatsapp = `Confira este post: ${post?.title || 'Post'}\n${post?.excerpt || ''}`;
+  const encodedTextWhatsapp = encodeURIComponent(textWhatsapp);
+
+  // Texto para Twitter/X (sem URL dentro)
+  const textTwitter = `${post?.title || 'Post'}\n${post?.excerpt || ''}`;
+  const encodedTextTwitter = encodeURIComponent(textTwitter);
+
+  const encodedUrl = encodeURIComponent(postUrl);
+
+  let shareUrl = '';
+
+  switch (platform) {
+    case 'whatsapp':
+      shareUrl = `https://api.whatsapp.com/send?text=${encodedTextWhatsapp}`;
+      break;
+
+    case 'telegram':
+      shareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedTextWhatsapp}`;
+      break;
+
+    case 'twitter':
+      shareUrl = `https://twitter.com/intent/tweet?text=${encodedTextTwitter}&url=${encodedUrl}`;
+      break;
+
+    case 'facebook':
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+      break;
+
+    case 'linkedin':
+      shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+      break;
+
+    default:
+      console.error('Plataforma não suportada:', platform);
       return;
-    }
+  }
 
-    const url = `${window.location.origin}/posts/${postId}`;
-    const text = `Confira este post: ${post?.title || 'Post'}`;
-    const encodedUrl = encodeURIComponent(url);
-    const encodedText = encodeURIComponent(text);
+  window.open(shareUrl, '_blank');
+};
 
-    let shareUrl = '';
-
-    switch (platform) {
-      case 'whatsapp':
-        shareUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
-        break;
-
-      case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
-        break;
-
-      case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
-        break;
-
-      case 'linkedin':
-        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
-        break;
-
-      case 'telegram':
-        shareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
-        break;
-
-      default:
-        console.error('Plataforma não suportada:', platform);
-        return;
-    }
-
-    window.open(shareUrl, '_blank', 'noopener,noreferrer');
-  };
 
   if (loading) return <p className={styles.loading}>Carregando...</p>;
   if (error) return <p className={styles.error}>{error}</p>;

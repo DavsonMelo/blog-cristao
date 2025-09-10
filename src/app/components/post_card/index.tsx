@@ -9,7 +9,6 @@ import { Heart, MessageSquare, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePostLikes } from '@/hooks/usePostLikes';
-import { useShare } from '@/app/context/ShareContext';
 
 interface PostCardProps {
   post: PostWithUser;
