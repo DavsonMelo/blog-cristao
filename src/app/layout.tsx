@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { ThemeProvider } from './context';
 import { Poppins, Inter } from 'next/font/google'; // <-- Adicione estas importações
 import { DraftPostProvider } from './context/DraftPostContext';
-import { AuthProvider } from "./context/auth";
+import { AuthProvider } from './context/AuthContext';
 
 import './globals.scss';
 import Header from './components/header';
@@ -39,17 +39,13 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${poppins.variable} ${inter.variable}`}
     >
-      <head>
-        {/* ... (seu script de tema) */}
-      </head>
+      <head>{/* ... (seu script de tema) */}</head>
       <body>
         <AuthProvider>
           <ThemeProvider>
             <DraftPostProvider>
               <Header />
-              <main style={{ paddingTop: '60px' }}>
-                {children}
-              </main>
+              <main style={{ paddingTop: '60px' }}>{children}</main>
               <ToastContainer />
             </DraftPostProvider>
           </ThemeProvider>

@@ -2,7 +2,7 @@
 
 import { useContext } from 'react';
 import { ThemeContext } from '@/app/context';
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon } from 'lucide-react';
 
 export default function ThemeToggleButton() {
   const { theme, toggle } = useContext(ThemeContext)!;
@@ -20,7 +20,7 @@ export default function ThemeToggleButton() {
         cursor: 'pointer',
       }}
     >
-      {theme === 'dark' ? <Sun/> : <Moon/>}
+      {theme === 'dark' ? <Sun /> : <Moon />}
     </button>
   );
 }

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/app/context/auth'; // <--- Usando o hook centralizado
+import { useAuth } from '@/app/context/AuthContext'; // <--- Usando o hook centralizado
 import ThemeToggleButton from '@/app/components/theme_button/index';
 import LoginButton from '@/app/components/login_button/index'; // Este botão deve lidar com a lógica do modal
 import NavItem from '../nav_itens/NavItens';
@@ -15,7 +15,9 @@ interface HeaderClientProps {
   greatVibesClassName: string;
 }
 
-export default function HeaderClient({ greatVibesClassName }: HeaderClientProps) {
+export default function HeaderClient({
+  greatVibesClassName,
+}: HeaderClientProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -44,9 +46,7 @@ export default function HeaderClient({ greatVibesClassName }: HeaderClientProps)
 
   // Renderiza o nome do usuário de forma mais flexível
   const displayName =
-    user?.displayName ||
-    userData?.name ||
-    (user ? 'Usuário' : ''); // Se user existe mas não tem nome, mostra "Usuário"
+    user?.displayName || userData?.name || (user ? 'Usuário' : ''); // Se user existe mas não tem nome, mostra "Usuário"
 
   return (
     <>
@@ -117,9 +117,7 @@ export default function HeaderClient({ greatVibesClassName }: HeaderClientProps)
         {isLoading ? (
           // Placeholder enquanto carrega. Pode ser um ícone de carregamento ou algo similar.
           // O LoginButton também pode ter sua própria lógica de loading.
-          <div className={styles.userMenu}>
-            {/* Pode ser um spinner */}
-          </div>
+          <div className={styles.userMenu}>{/* Pode ser um spinner */}</div>
         ) : !user ? (
           // Se não houver usuário e não estiver carregando, mostra o botão de login
           <LoginButton />
@@ -128,7 +126,11 @@ export default function HeaderClient({ greatVibesClassName }: HeaderClientProps)
           <div className={styles.userMenu}>
             <Image
               className={styles.avatar}
-              src={user.photoURL || userData?.profileImageUrl || '/default-avatar.jpg'}
+              src={
+                user.photoURL ||
+                userData?.profileImageUrl ||
+                '/default-avatar.jpg'
+              }
               alt="avatar"
               width={40}
               height={40}
