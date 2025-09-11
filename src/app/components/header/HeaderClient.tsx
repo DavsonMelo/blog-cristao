@@ -1,37 +1,25 @@
+// blogfolio/src/app/components/header/HeaderClient.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { getDoc, doc } from 'firebase/firestore';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { auth, db } from '@/lib/firebase';
+import { useAuth } from '@/app/context/auth'; // <--- Usando o hook centralizado
 import ThemeToggleButton from '@/app/components/theme_button/index';
-import LoginButton from '@/app/components/login_button/index';
+import LoginButton from '@/app/components/login_button/index'; // Este botão deve lidar com a lógica do modal
 import NavItem from '../nav_itens/NavItens';
 import styles from './styles.module.scss';
 
-// Propriedades que o componente cliente vai receber do servidor
+// Propriedades que o componente cliente vai receber do servidor (se houver)
 interface HeaderClientProps {
   greatVibesClassName: string;
 }
 
-const handleLogout = async () => {
-  try {
-    await signOut(auth);
-    await fetch('/api/sessionLogout', { method: 'POST' });
-    window.location.href = '/';
-  } catch (err: any) {
-    console.error('Erro ao deslogar:', err);
-  }
-};
-
 export default function HeaderClient({ greatVibesClassName }: HeaderClientProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<any>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const { user, userData, isLoading, logout } = useAuth(); // <--- Consumindo do AuthProvider
 
   const handlePrefetch = (() => {
     let prefetched = false;
@@ -47,22 +35,6 @@ export default function HeaderClient({ greatVibesClassName }: HeaderClientProps)
   })();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const ref = doc(db, 'users', currentUser.uid);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          setUserData(snap.data());
-        }
-      } else {
-        setUserData(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
     if (!menuOpen) return;
     const timer = setTimeout(() => {
       setMenuOpen(false);
@@ -70,10 +42,11 @@ export default function HeaderClient({ greatVibesClassName }: HeaderClientProps)
     return () => clearTimeout(timer);
   }, [menuOpen]);
 
-  const firstName =
-    user?.displayName?.split(' ')[0] ||
-    userData?.name?.split(' ')[0] ||
-    'Usuário';
+  // Renderiza o nome do usuário de forma mais flexível
+  const displayName =
+    user?.displayName ||
+    userData?.name ||
+    (user ? 'Usuário' : ''); // Se user existe mas não tem nome, mostra "Usuário"
 
   return (
     <>
@@ -101,7 +74,8 @@ export default function HeaderClient({ greatVibesClassName }: HeaderClientProps)
             />
           </>
         )}
-        {user && <NavItem label="Sair" onClick={handleLogout} />}
+        {/* Apenas exibe "Sair" se o usuário estiver logado */}
+        {user && <NavItem label="Sair" onClick={logout} />}
       </div>
 
       {/* Mobile nav */}
@@ -133,26 +107,34 @@ export default function HeaderClient({ greatVibesClassName }: HeaderClientProps)
               />
             </>
           )}
-          {user && <NavItem label="Sair" onClick={handleLogout} />}
+          {user && <NavItem label="Sair" onClick={logout} />}
         </div>
       </nav>
 
       {/* User actions */}
       <div className={styles.userActions}>
         <ThemeToggleButton />
-        {!user ? (
+        {isLoading ? (
+          // Placeholder enquanto carrega. Pode ser um ícone de carregamento ou algo similar.
+          // O LoginButton também pode ter sua própria lógica de loading.
+          <div className={styles.userMenu}>
+            {/* Pode ser um spinner */}
+          </div>
+        ) : !user ? (
+          // Se não houver usuário e não estiver carregando, mostra o botão de login
           <LoginButton />
         ) : (
+          // Se houver usuário, mostra o avatar e o nome
           <div className={styles.userMenu}>
             <Image
               className={styles.avatar}
-              src={user.photoURL || '/default-avatar.jpg'}
+              src={user.photoURL || userData?.profileImageUrl || '/default-avatar.jpg'}
               alt="avatar"
               width={40}
               height={40}
               priority
             />
-            <span className={styles.username}>{firstName}</span>
+            <span className={styles.username}>{displayName}</span>
           </div>
         )}
         <button

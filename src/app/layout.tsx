@@ -1,12 +1,16 @@
+// blogfolio/src/app/layout.tsx
+
 import type { Metadata } from 'next';
 import { ThemeProvider } from './context';
-import { Poppins, Inter } from 'next/font/google';
+import { Poppins, Inter } from 'next/font/google'; // <-- Adicione estas importações
 import { DraftPostProvider } from './context/DraftPostContext';
+import { AuthProvider } from "./context/auth";
 
 import './globals.scss';
 import Header from './components/header';
 import { ToastContainer } from 'react-toastify';
 
+// <-- Defina as variáveis de fonte novamente
 const poppins = Poppins({
   subsets: ['latin'],
   weight: ['600', '700'],
@@ -36,32 +40,20 @@ export default function RootLayout({
       className={`${poppins.variable} ${inter.variable}`}
     >
       <head>
-        {/* Script para evitar o flash de tema errado */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                const storedTheme = localStorage.getItem('theme');
-                const theme = storedTheme || 'light';
-                document.documentElement.classList.add(theme);
-              })();
-            `,
-          }}
-        />
+        {/* ... (seu script de tema) */}
       </head>
       <body>
-        <ThemeProvider>
-          {/* providencia o tema escolhido pelo usuario e armazena as mudanças */}
-          <DraftPostProvider>
-            {/* Esse código implementa um Context API no React para gerenciar o estado de um rascunho de post (com título, conteúdo, autor etc.). */}
-            <Header />
-            {/* header da aplicação. Vai em todas as pages */}
-            <main style={{ paddingTop: '60px' }}>
-              {children}
+        <AuthProvider>
+          <ThemeProvider>
+            <DraftPostProvider>
+              <Header />
+              <main style={{ paddingTop: '60px' }}>
+                {children}
+              </main>
               <ToastContainer />
-            </main>
-          </DraftPostProvider>
-        </ThemeProvider>
+            </DraftPostProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
