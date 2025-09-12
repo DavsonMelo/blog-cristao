@@ -14,6 +14,8 @@ interface PostCardProps {
   post: PostWithUser;
 }
 
+// ... imports mantidos
+
 export default function PostCard({ post }: PostCardProps) {
   const [firebaseUser] = useAuthState(auth);
   const user: User | null = firebaseUser
@@ -27,11 +29,10 @@ export default function PostCard({ post }: PostCardProps) {
     : null;
 
   const { liked, likesCount, toggleLike } = usePostLikes(post, user ?? null);
-  const router = useRouter(); // Garantimos que a data e o resumo existam
+  const router = useRouter();
   const excerpt = post.excerpt;
-  // Usa o nome e a URL de perfil do usuário, com um fallback
   const authorName = post.user?.name || 'Autor Desconhecido';
-  const authorImage = post.user?.profileImageUrl|| '/default-avatar.jpg';
+  const authorImage = post.user?.profileImageUrl || '/default-avatar.jpg';
   const createdAt = post.createdAt;
 
   const handleAuthorClick = () => {
@@ -40,13 +41,11 @@ export default function PostCard({ post }: PostCardProps) {
     }
   };
 
-  // Função para toggle like
+  const isAuthor = user?.uid === post.authorUID;
 
   return (
     <div className={styles.card}>
-      {/* Classe do logo do autor, nome do autor e data de criação */}
       <div className={styles.authorInfo}>
-        {/* Classe do logo do autor e nome do autor */}
         <div className={styles.author} onClick={handleAuthorClick}>
           <img
             src={authorImage}
@@ -54,20 +53,35 @@ export default function PostCard({ post }: PostCardProps) {
             className={styles.avatar}
             style={{ cursor: 'pointer' }}
           />
-          {/* Classe do nome do autor */}
           <span className={styles.name} style={{ cursor: 'pointer' }}>
             {authorName}
           </span>
         </div>
         {createdAt && (
-          // Classe da data de criação
           <span className={styles.createdDate}>
             {format(new Date(createdAt), 'd MMM yyyy, HH:mm', { locale: ptBR })}
           </span>
         )}
       </div>
 
-      <h2 className={styles.title}>{post.title}</h2>
+      {/* Título com botões de edição/remover */}
+      <div className={styles.titleRow}>
+        <h2 className={styles.title}>{post.title}</h2>
+        {isAuthor && (
+          <div className={styles.actions}>
+            <Edit
+              size={16}
+              className={styles.actionIcon}
+              onClick={() => router.push(`/posts/${post.id}/edit`)}
+            />
+            <Trash
+              size={16}
+              className={styles.actionIcon}
+              onClick={() => console.log('Excluir post', post.id)}
+            />
+          </div>
+        )}
+      </div>
 
       {post.featuredImageUrl && (
         <div
@@ -112,3 +126,4 @@ export default function PostCard({ post }: PostCardProps) {
     </div>
   );
 }
+
