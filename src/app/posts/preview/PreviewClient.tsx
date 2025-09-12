@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { resizeImage } from "@/utils/resizeImage";
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import {
@@ -52,8 +53,11 @@ export default function PreviewClient() {
         await setDoc(userRef, userData);
       }
 
+      // 🔧 Redimensionar e comprimir imagem antes do upload
+    const optimizedImage = await resizeImage(draft.imageFile);
+
       const formData = new FormData();
-      formData.append('file', draft.imageFile);
+      formData.append('file', optimizedImage);
       formData.append(
         'upload_preset',
         process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
