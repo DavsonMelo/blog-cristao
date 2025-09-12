@@ -149,13 +149,13 @@ export default function PostDetailClient({
     const postUrl = `${window.location.origin}/posts/${postId}`;
 
     // Texto para WhatsApp/Telegram
-    const textWhatsapp = `Confira este post: ${post?.title || 'Post'}\n${
-      post?.excerpt || ''
-    }\n${postUrl}`;
+    const textWhatsapp = `Confira este post:\n ${post?.title || 'Post'}${
+      post?.excerpt || ''}\n${postUrl}`;
+      
     const encodedTextWhatsapp = encodeURIComponent(textWhatsapp);
 
     // Texto para Twitter/X (sem URL dentro)
-    const textTwitter = `${post?.title || 'Post'}\n${post?.excerpt || ''}`;
+    const textTwitter = `${post?.title || 'Post'}\n\n${post?.excerpt || ''}`;
     const encodedTextTwitter = encodeURIComponent(textTwitter);
 
     const encodedUrl = encodeURIComponent(postUrl);
