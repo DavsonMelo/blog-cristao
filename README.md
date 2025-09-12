@@ -121,9 +121,9 @@ NODE_ENV=development
 
 ## 📌 Autenticação & Sessão
 
-- [ ] Unificar lógica de autenticação (Firebase Auth + Session Cookie API)
-- [ ] Criar hook `useAuth()` para centralizar login, logout e estado do usuário
-- [ ] Garantir expiração e renovação de sessões no backend
+- [x] Unificar lógica de autenticação (Firebase Auth + Session Cookie API)
+- [x] Criar hook `useAuth()` para centralizar login, logout e estado do usuário
+- [x] Garantir expiração e renovação de sessões no backend
 - [ ] Bloquear rotas privadas via middleware
 
 ## 🖼️ Posts & Imagens
