@@ -5,7 +5,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import styles from './styles.module.scss';
 import { auth } from '@/lib/firebase';
 import type { PostWithUser, User } from '@/lib/types';
-import { Heart, MessageSquare, Eye } from 'lucide-react';
+import { Heart, MessageSquare, Eye, Edit, Trash } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePostLikes } from '@/hooks/usePostLikes';
