@@ -21,12 +21,30 @@
   }
 }
 
-.title {
-  text-align: center;
-  font-size: 16px;
-  color: var(--text-color);
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-inline: 10px;
+  margin-bottom: 8px;
 }
 
+.title {
+  font-size: 16px;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.trashIcon {
+  cursor: pointer;
+  stroke: var(--text-color);
+  transition: stroke 0.2s ease;
+
+  &:hover {
+    stroke: red;
+  }
+}
 .imageWrapper {
   width: 350px;
   padding: 10px;
@@ -119,4 +137,32 @@
   color: var(--text-color);
   white-space: nowrap; /* evita quebrar a data em duas linhas */
 }
+.iconWrapper {
+  position: relative;
+  display: inline-flex;
+
+  &:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-6px);
+  }
+}
+
+.tooltip {
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
 
