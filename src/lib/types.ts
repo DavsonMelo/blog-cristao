@@ -10,6 +10,7 @@ export interface Post {
   content: string; // Conteúdo completo
   excerpt: string; // Resumo para a home
   featuredImageUrl?: string; // URL da imagem em destaque (mais descritivo)
+  imagePublicId: string; // <- adiciona isso
   likesCount: number; // Contador de likes (mais descritivo)
   commentsCount: number; // Contador de comentários (mais descritivo)
   createdAt: string | null;

@@ -34,68 +34,74 @@ export default function PreviewClient() {
   }
 
   const handlePublish = async () => {
-    if (!draft.title || !draft.content || !draft.imageFile) {
-      setError('Título, conteúdo e imagem são obrigatórios!');
-      return;
+  if (!draft.title || !draft.content || !draft.imageFile) {
+    setError('Título, conteúdo e imagem são obrigatórios!');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const userRef = doc(db, 'users', draft.authorUID);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      const userData: User = {
+        uid: draft.authorUID,
+        name: draft.authorEmail.split('@')[0] || 'Usuário Anônimo',
+        email: draft.authorEmail,
+        profileImageUrl: draft.authorPhoto || '/default-avatar.jpg',
+      };
+      await setDoc(userRef, userData);
     }
 
-    setLoading(true);
-    try {
-      const userRef = doc(db, 'users', draft.authorUID);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) {
-        const userData: User = {
-          uid: draft.authorUID,
-          name: draft.authorEmail.split('@')[0] || 'Usuário Anônimo',
-          email: draft.authorEmail,
-          profileImageUrl: draft.authorPhoto || '/default-avatar.jpg',
-        };
-        await setDoc(userRef, userData);
-      }
-
-      // 🔧 Redimensionar e comprimir imagem antes do upload
+    // 🔧 Redimensionar e comprimir imagem antes do upload
     const optimizedImage = await resizeImage(draft.imageFile);
 
-      const formData = new FormData();
-      formData.append('file', optimizedImage);
-      formData.append(
-        'upload_preset',
-        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
-      );
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      );
-      const data = await res.json();
-      if (!data.secure_url) {
-        throw new Error('Falha no upload da imagem');
-      }
+    const formData = new FormData();
+    formData.append('file', optimizedImage);
+    formData.append(
+      'upload_preset',
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+    );
 
-      const excerpt =
-        draft.content.length > 200
-          ? draft.content.slice(0, 200) + '...'
-          : draft.content;
+    const uploadRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      { method: 'POST', body: formData }
+    );
 
-      const newPost: Omit<Post, 'createdAt'> & { createdAt?: any } = {
-        title: draft.title,
-        content: draft.content,
-        excerpt,
-        featuredImageUrl: data.secure_url,
-        authorUID: draft.authorUID,
-        createdAt: serverTimestamp(),
-        likesCount: 0,
-        commentsCount: 0,
-      };
-      await addDoc(collection(db, 'posts'), newPost);
+    const data = await uploadRes.json();
 
-      setDraft(null);
-      router.push('/');
-    } catch (err: any) {
-      setError('Erro ao publicar post: ' + err.message);
-    } finally {
-      setLoading(false);
+    if (!data.secure_url || !data.public_id) {
+      throw new Error('Falha no upload da imagem');
     }
-  };
+
+    const excerpt =
+      draft.content.length > 200
+        ? draft.content.slice(0, 200) + '...'
+        : draft.content;
+
+    const newPost: Omit<Post, 'createdAt'> & { createdAt?: any } = {
+      title: draft.title,
+      content: draft.content,
+      excerpt,
+      featuredImageUrl: data.secure_url,
+      imagePublicId: data.public_id, // ⚡ salvando o public_id do Cloudinary
+      authorUID: draft.authorUID,
+      createdAt: serverTimestamp(),
+      likesCount: 0,
+      commentsCount: 0,
+    };
+
+    await addDoc(collection(db, 'posts'), newPost);
+
+    setDraft(null);
+    router.push('/');
+  } catch (err: any) {
+    setError('Erro ao publicar post: ' + err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className={styles.previewPage}>
