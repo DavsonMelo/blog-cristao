@@ -22,19 +22,21 @@ interface DraftData {
   timestamp: number;
 }
 
-export default function CreatePostPageClient({ user }: CreatePostPageClientProps) {
+export default function CreatePostPageClient({
+  user,
+}: CreatePostPageClientProps) {
   const router = useRouter();
   const { draft, setDraft } = useDraftPost();
-
   // ---------------------------
   // Estados locais do formulário
   // ---------------------------
   const [title, setTitle] = useState(draft?.title || '');
   const [content, setContent] = useState(draft?.content || '');
-  const [imageFile, setImageFile] = useState<File | null>(draft?.imageFile || null);
+  const [imageFile, setImageFile] = useState<File | null>(
+    draft?.imageFile || null
+  );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const MAX_CONTENT_LENGTH = 700;
 
   // ----------------------------------------
@@ -45,6 +47,10 @@ export default function CreatePostPageClient({ user }: CreatePostPageClientProps
     'postDraft',
     3000
   );
+
+  useEffect(() => {
+    setDraft(null); // limpa draft sempre que abrir a página de criação
+  }, []);
 
   // ---------------------------------------------------
   // Recupera rascunho salvo no localStorage ao carregar
@@ -79,7 +85,9 @@ export default function CreatePostPageClient({ user }: CreatePostPageClientProps
       return;
     }
     if (content.length > MAX_CONTENT_LENGTH) {
-      setError(`O conteúdo deve ter no máximo ${MAX_CONTENT_LENGTH} caracteres.`);
+      setError(
+        `O conteúdo deve ter no máximo ${MAX_CONTENT_LENGTH} caracteres.`
+      );
       return;
     }
 
@@ -93,6 +101,8 @@ export default function CreatePostPageClient({ user }: CreatePostPageClientProps
       previewUrl: URL.createObjectURL(imageFile),
       authorUID: user.uid,
       authorEmail: user.email,
+      authorName: user.name || user.email.split('@')[0],
+      authorPhoto: user.picture || '/default-avatar.jpg',
     });
 
     setError('');
@@ -169,7 +179,6 @@ export default function CreatePostPageClient({ user }: CreatePostPageClientProps
             disabled={loading}
             className={styles.previewButton}
             onMouseEnter={handlePrefetch} // pré-carrega rota no hover
-            onFocus={handlePrefetch} // pré-carrega rota no foco
             onTouchStart={handlePrefetch} // pré-carrega rota no toque mobile
           >
             {loading ? 'Carregando...' : 'Preview'}
