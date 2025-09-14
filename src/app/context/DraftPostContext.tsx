@@ -13,6 +13,7 @@ interface DraftPost {
   imageFile?: File;       // arquivo de imagem opcional
   previewUrl?: string;    // URL de preview opcional da imagem
   authorUID: string;      // ID único do autor (obrigatório)
+  authorName: string;
   authorEmail: string;    // e-mail do autor (obrigatório)
   authorPhoto?: string;   // foto do autor (opcional)
 }

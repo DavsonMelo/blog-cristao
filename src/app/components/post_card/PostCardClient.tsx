@@ -4,13 +4,14 @@
 import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import styles from './styles.module.scss';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import type { PostWithUser, User } from '@/lib/types';
 import { Heart, MessageSquare, Eye, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePostLikes } from '@/hooks/usePostLikes';
 import { useState } from 'react';
+import { deleteDoc, doc } from "firebase/firestore";
 
 interface PostCardProps {
   post: PostWithUser;
@@ -18,6 +19,7 @@ interface PostCardProps {
 
 export default function PostCardClient({ post }: PostCardProps) {
   const [showConfirm, setShowConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [firebaseUser] = useAuthState(auth);
   const user: User | null = firebaseUser
     ? {
@@ -31,7 +33,6 @@ export default function PostCardClient({ post }: PostCardProps) {
 
   const { liked, likesCount, toggleLike } = usePostLikes(post, user ?? null);
   const router = useRouter();
-
   const excerpt = post.excerpt;
   const authorName = post.user?.name || 'Autor Desconhecido';
   const authorImage = post.user?.profileImageUrl || '/default-avatar.jpg';
@@ -39,6 +40,32 @@ export default function PostCardClient({ post }: PostCardProps) {
 
   const handleAuthorClick = () => {
     if (post.authorUID) router.push(`/posts/author/${post.authorUID}`);
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true); // inicia o loading
+    try {
+      const res = await fetch('/api/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.id,
+          imagePublicId: post.imagePublicId}),
+      });
+      const data = await res.json();
+
+      if (data.success) { 
+        await deleteDoc(doc(db, 'posts', post.id))
+        
+        router.refresh(); // Atualiza a lista de posts
+      } else {
+        console.error('Erro ao deletar:', data.error);
+      }
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+    } finally {
+      setDeleting(false); // termina o loading
+    }
   };
 
   return (
@@ -50,7 +77,7 @@ export default function PostCardClient({ post }: PostCardProps) {
             <div className={styles.modalActions}>
               <button
                 onClick={() => {
-                  // A função de delete será adicionada depois
+                  handleDelete();
                   setShowConfirm(false);
                 }}
                 className={styles.confirmButton}
