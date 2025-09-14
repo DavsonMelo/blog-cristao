@@ -1,9 +1,8 @@
-
 .card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%; 
+  width: 100%;
   max-width: 350px;
   padding: 10px;
   box-sizing: border-box;
@@ -140,11 +139,12 @@
 .iconWrapper {
   position: relative;
   display: inline-flex;
+  transition: all 0.2s ease;
+  color: var(--text-color); // herda a cor do texto atual
 
-  &:hover .tooltip {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(-6px);
+  &:hover {
+    color: red;
+    transform: scale(1.15);
   }
 }
 
@@ -164,6 +164,74 @@
   transition: all 0.2s ease;
   z-index: 10;
 }
+.modalOverlay {
+  position: fixed; // faz o modal flutuar sobre tudo
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); // overlay escuro
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999; // acima de tudo
+}
 
+.modal {
+  background: var(--bg-color);
+  padding: 24px 20px;
+  border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  animation: fadeIn 0.2s ease-out;
+}
 
+.modalActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.confirmButton {
+  background: red;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.confirmButton:hover {
+  background: darkred;
+}
+
+.cancelButton {
+  background: transparent;
+  color: var(--text-color);
+  border: 1px solid var(--text-color);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: var(--text-color);
+  color: var(--bg-color);
+}
+
+/* animação simples */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
