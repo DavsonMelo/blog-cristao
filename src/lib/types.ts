@@ -24,6 +24,7 @@ export interface User {
 }
 // Post combinado com usuário (para consumo no front-end)
 export interface PostWithUser extends Post {
+  imagePublicId: any;
   id: string;
   user?: User;
 }

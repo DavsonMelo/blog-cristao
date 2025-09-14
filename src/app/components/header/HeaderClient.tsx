@@ -65,13 +65,6 @@ export default function HeaderClient({
                 setMenuOpen(false);
               }}
             />
-            <NavItem
-              label="Editar posts"
-              onClick={() => {
-                router.push('/posts/edit');
-                setMenuOpen(false);
-              }}
-            />
           </>
         )}
         {/* Apenas exibe "Sair" se o usuário estiver logado */}
@@ -95,13 +88,6 @@ export default function HeaderClient({
                   handlePrefetch();
                   localStorage.removeItem('postDraft');
                   router.push('/posts/create');
-                  setMenuOpen(false);
-                }}
-              />
-              <NavItem
-                label="Editar posts"
-                onClick={() => {
-                  router.push('/posts/edit');
                   setMenuOpen(false);
                 }}
               />
