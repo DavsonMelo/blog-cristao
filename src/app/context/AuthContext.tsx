@@ -1,4 +1,4 @@
-// blogfolio/src/app/context/auth.tsx (Ajustado)
+// blogfolio/src/app/context/auth.tsx
 
 'use client';
 
@@ -8,7 +8,7 @@ import {
   useEffect,
   useState,
   ReactNode,
-  useCallback, // Importar useCallback
+  useCallback,
 } from 'react';
 import {
   getAuth,
@@ -25,7 +25,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { app, db } from '@/lib/firebase';
 import { User as UserProfile } from '@/lib/types';
-import { useRouter } from 'next/navigation'; // Importar useRouter para redirecionamento no modal
+import { useRouter } from 'next/navigation';
 
 interface AuthContextProps {
   user: User | null;
@@ -36,8 +36,8 @@ interface AuthContextProps {
   loginWithGithub: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   createAccount: (email: string, password: string, name: string) => Promise<void>;
-  // Adicionar função para fechar o modal (se necessário para o AuthModal)
   closeAuthModal: () => void;
+  isAuthModalOpen: boolean;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -46,97 +46,95 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // Estado para controlar o modal
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const auth = getAuth(app);
-  const router = useRouter(); // Para redirecionamentos
+  const router = useRouter();
 
   const saveUserProfileAndCreateSession = useCallback(async (userAuth: User) => {
-    const userRef = doc(db, 'users', userAuth.uid);
-    const userDoc = await getDoc(userRef);
-    const profile: UserProfile = {
-      uid: userAuth.uid,
-      name: userAuth.displayName || 'Usuário',
-      email: userAuth.email || '',
-      profileImageUrl: userAuth.photoURL || undefined,
-    };
-    if (!userDoc.exists()) {
-      await setDoc(userRef, profile);
-    } else {
+    try {
+      const userRef = doc(db, 'users', userAuth.uid);
+      const userDoc = await getDoc(userRef);
+      const profile: UserProfile = {
+        uid: userAuth.uid,
+        name: userAuth.displayName || 'Usuário',
+        email: userAuth.email || '',
+        profileImageUrl: userAuth.photoURL || undefined,
+      };
+      // Usar a opção 'merge: true' sempre é uma boa prática
       await setDoc(userRef, profile, { merge: true });
+      setUserData(profile);
+      const idToken = await userAuth.getIdToken(true);
+      await fetch('/api/sessionLogin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+    } catch (error) {
+      console.error('Erro ao salvar perfil ou criar sessão:', error);
+      // Você pode adicionar uma notificação ao usuário aqui
+      throw error; // Lança o erro para que o onAuthStateChanged saiba que algo falhou
     }
-    setUserData(profile);
-    const idToken = await userAuth.getIdToken(true);
-    await fetch('/api/sessionLogin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken }),
-    });
-  }, []); // useCallback para evitar recriação da função
+  }, []);
 
   useEffect(() => {
-    // 1. Tenta obter o resultado do redirect PRIMEIRO
-    const processRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result && result.user) {
-          // Se o login por redirect foi bem-sucedido
-          await saveUserProfileAndCreateSession(result.user);
-          setUser(result.user);
-          // O redirect pode ter vindo de um login, então fechamos o modal se estiver aberto
-          setIsAuthModalOpen(false);
-          // Opcional: redirecionar para a página original ou home
-          // router.push('/'); 
-        }
-      } catch (error) {
-        console.error('Erro no resultado do redirect:', error);
-        // Tratar erro de redirect aqui (ex: mostrar um alert)
-      } finally {
-        setIsLoading(false); // Finaliza o loading após tentar o redirect
-      }
-    };
-
-    // 2. Em seguida, escuta as mudanças de estado do usuário (para casos de login já existente ou logout)
+    // Escuta as mudanças de estado de autenticação
     const unsubscribeAuthState = onAuthStateChanged(auth, async (currentUser) => {
+      // Se houver um usuário logado
       if (currentUser) {
+        // Apenas atualiza o estado local e dispara a função se for um novo login ou uma atualização de estado
         setUser(currentUser);
         await saveUserProfileAndCreateSession(currentUser);
       } else {
-        // Se não há usuário logado E o redirect não trouxe um, limpamos os dados
-        if (!isLoading) { // Evita limpar se o redirect ainda está processando
-            setUser(null);
-            setUserData(null);
-        }
+        // Se o usuário deslogou ou não há um usuário
+        // O erro de permissão é evitado porque saveUserProfileAndCreateSession não é chamado aqui
+        setUser(null);
+        setUserData(null);
+        await fetch('/api/sessionLogout', { method: 'POST' }); // Garante o logout no servidor
       }
-      // Se o loading ainda está ativo, significa que o redirect terminou ou não houve redirect.
-      if (isLoading) setIsLoading(false);
+      setIsLoading(false); // Sempre para o loading após verificar o estado inicial
     });
 
-    // Chamamos processRedirect para tentar capturar o resultado do redirect
-    processRedirect(); 
-    
-    return () => {
-        unsubscribeAuthState(); // Limpa o listener do onAuthStateChanged
-    };
-  }, [auth, saveUserProfileAndCreateSession, isLoading, router]); // Adicionado isLoading e router nas dependências
+    // Limpeza do listener ao desmontar o componente
+    return () => unsubscribeAuthState();
+  }, [auth, saveUserProfileAndCreateSession]);
+
+  // Função para lidar com o redirect, separada do useEffect para maior clareza
+  const handleRedirectResult = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const result = await getRedirectResult(auth);
+      if (result && result.user) {
+        // Se o login por redirect foi bem-sucedido, o onAuthStateChanged vai lidar com o resto.
+        // Apenas fechamos o modal e redirecionamos, se necessário.
+        setIsAuthModalOpen(false);
+        // Opcional: router.push('/');
+      }
+    } catch (error) {
+      console.error('Erro no resultado do redirect:', error);
+      alert('Ocorreu um erro no login. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [auth, router]);
+
+  useEffect(() => {
+    // Chamada inicial para verificar o resultado de um redirect
+    handleRedirectResult();
+  }, [handleRedirectResult]);
 
   // Funções de login
   const loginWithGoogle = async () => {
-    setIsAuthModalOpen(true); // Abre o modal primeiro
     setIsLoading(true);
     try {
       await signInWithRedirect(auth, new GoogleAuthProvider());
-      // O redirect vai mudar a página. A lógica de processamento está no useEffect.
     } catch (error) {
       console.error('Erro ao iniciar login com Google:', error);
-      // Aqui é onde podemos ter um feedback visual para o usuário
-      alert('Ocorreu um erro ao iniciar o login com Google.'); 
-      setIsLoading(false); // Garante que o loading pare em caso de erro imediato
-      // throw error; // Não lançamos erro aqui pois o redirect cuida do processamento
+      alert('Ocorreu um erro ao iniciar o login com Google.');
+      setIsLoading(false);
     }
   };
-  
+
   const loginWithGithub = async () => {
-    setIsAuthModalOpen(true);
     setIsLoading(true);
     try {
       await signInWithRedirect(auth, new GithubAuthProvider());
@@ -150,13 +148,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginWithEmail = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Usamos signInWithEmailAndPassword, que é síncrono
       await signInWithEmailAndPassword(auth, email, password);
-      // A lógica de salvar perfil e sessão será tratada pelo onAuthStateChanged no useEffect
-      setIsAuthModalOpen(false); // Fecha o modal após login bem-sucedido com email
+      setIsAuthModalOpen(false);
     } catch (error) {
       console.error('Erro ao logar com Email:', error);
-      throw error; // Lançamos o erro para o AuthModal lidar
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -166,13 +162,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      // O onAuthStateChanged no useEffect vai pegar o novo usuário e salvar o perfil
-      // Precisamos garantir que o saveUserProfileAndCreateSession seja chamado com o novo usuário
-      await saveUserProfileAndCreateSession(userCred.user);
-      setIsAuthModalOpen(false); // Fecha o modal após criar conta e logar
+      // O onAuthStateChanged vai capturar a mudança de estado e salvar o perfil,
+      // não é necessário chamar a função aqui
+      setIsAuthModalOpen(false);
     } catch (error) {
       console.error('Erro ao criar conta:', error);
-      throw error; // Lançamos o erro para o AuthModal lidar
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -182,9 +177,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       await signOut(auth);
-      await fetch('/api/sessionLogout', { method: 'POST' });
-      setUser(null); // Limpa o estado local
-      setUserData(null);
+      // O onAuthStateChanged vai limpar os estados de usuário e fazer o logout na API,
+      // simplificando o código aqui
     } catch (error) {
       console.error('Erro ao deslogar:', error);
     } finally {
@@ -193,9 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const closeAuthModal = () => {
-      setIsAuthModalOpen(false);
-      // Opcional: Se o modal for fechado manualmente, você pode querer redirecionar
-      // router.push('/'); 
+    setIsAuthModalOpen(false);
   };
 
   const value = {
@@ -207,8 +199,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loginWithGithub,
     loginWithEmail,
     createAccount,
-    closeAuthModal, // Fornece a função para fechar o modal
-    isAuthModalOpen, // Fornece o estado do modal
+    closeAuthModal,
+    isAuthModalOpen,
   };
 
   return (
