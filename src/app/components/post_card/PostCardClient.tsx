@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePostLikes } from '@/hooks/usePostLikes';
 import { useState } from 'react';
-import { deleteDoc, doc } from "firebase/firestore";
+import { deleteDoc, doc } from 'firebase/firestore';
 
 interface PostCardProps {
   post: PostWithUser;
@@ -50,13 +50,13 @@ export default function PostCardClient({ post }: PostCardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           postId: post.id,
-          imagePublicId: post.imagePublicId}),
+          imagePublicId: post.imagePublicId,
+        }),
       });
+
       const data = await res.json();
 
-      if (data.success) { 
-        await deleteDoc(doc(db, 'posts', post.id))
-        
+      if (data.success) {
         router.refresh(); // Atualiza a lista de posts
       } else {
         console.error('Erro ao deletar:', data.error);
