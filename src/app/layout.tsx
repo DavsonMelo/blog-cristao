@@ -5,6 +5,7 @@ import { ThemeProvider } from './context';
 import { Poppins, Inter } from 'next/font/google'; // <-- Adicione estas importações
 import { DraftPostProvider } from './context/DraftPostContext';
 import { AuthProvider } from './context/AuthContext';
+import { Analytics } from "@vercel/analytics/next"
 
 import './globals.scss';
 import Header from './components/header';
@@ -47,6 +48,7 @@ export default function RootLayout({
               <Header />
               <main style={{ paddingTop: '60px' }}>{children}</main>
               <ToastContainer />
+              <Analytics/>
             </DraftPostProvider>
           </ThemeProvider>
         </AuthProvider>
