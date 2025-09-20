@@ -25,9 +25,26 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Meu Blogfólio',
-  description: 'Portfólio + Blog em Next.js',
+  title: 'Blog Cristão – Inspiração e Reflexões',
+  description: 'Mensagens, reflexões e artigos cristãos para inspiração espiritual. Edifique sua fé com conteúdos atualizados semanalmente.',
+  metadataBase: new URL('https://blog-cristao.vercel.app'),
+  openGraph: {
+    title: 'Blog Cristão – Inspiração e Reflexões',
+    description: 'Mensagens, reflexões e artigos cristãos para inspiração espiritual. Edifique sua fé com conteúdos atualizados semanalmente.',
+    url: 'https://blog-cristao.vercel.app',
+    siteName: 'Blog Cristão',
+    images: ['/default-og-image.png'],
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Blog Cristão – Inspiração e Reflexões',
+    description: 'Mensagens, reflexões e artigos cristãos para inspiração espiritual. Edifique sua fé com conteúdos atualizados semanalmente.',
+    images: ['/default-og-image.png'],
+  },
 };
+
 
 export default function RootLayout({
   children,

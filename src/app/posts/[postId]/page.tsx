@@ -30,7 +30,7 @@ export async function generateMetadata({
   ? postData.featuredImageUrl.startsWith('http')
     ? postData.featuredImageUrl
     : `${baseUrl}${postData.featuredImageUrl}`
-  : `${baseUrl}/default-og-image.jpg`;
+  : `${baseUrl}/default-og-image.png`;
 
 
   return {
