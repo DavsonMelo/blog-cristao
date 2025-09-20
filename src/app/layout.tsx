@@ -5,8 +5,8 @@ import { ThemeProvider } from './context';
 import { Poppins, Inter } from 'next/font/google'; // <-- Adicione estas importações
 import { DraftPostProvider } from './context/DraftPostContext';
 import { AuthProvider } from './context/AuthContext';
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import './globals.scss';
 import Header from './components/header';
@@ -27,11 +27,13 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Blog Cristão – Inspiração e Reflexões',
-  description: 'Mensagens, reflexões e artigos cristãos para inspiração espiritual. Edifique sua fé com conteúdos atualizados semanalmente.',
+  description:
+    'Mensagens, reflexões e artigos cristãos para inspiração espiritual. Edifique sua fé com conteúdos atualizados semanalmente.',
   metadataBase: new URL('https://blog-cristao.vercel.app'),
   openGraph: {
     title: 'Blog Cristão – Inspiração e Reflexões',
-    description: 'Mensagens, reflexões e artigos cristãos para inspiração espiritual. Edifique sua fé com conteúdos atualizados semanalmente.',
+    description:
+      'Mensagens, reflexões e artigos cristãos para inspiração espiritual. Edifique sua fé com conteúdos atualizados semanalmente.',
     url: 'https://blog-cristao.vercel.app',
     siteName: 'Blog Cristão',
     images: ['/default-og-image.png'],
@@ -41,11 +43,11 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Blog Cristão – Inspiração e Reflexões',
-    description: 'Mensagens, reflexões e artigos cristãos para inspiração espiritual. Edifique sua fé com conteúdos atualizados semanalmente.',
+    description:
+      'Mensagens, reflexões e artigos cristãos para inspiração espiritual. Edifique sua fé com conteúdos atualizados semanalmente.',
     images: ['/default-og-image.png'],
   },
 };
-
 
 export default function RootLayout({
   children,
@@ -64,10 +66,12 @@ export default function RootLayout({
           <ThemeProvider>
             <DraftPostProvider>
               <Header />
-              <main style={{ paddingTop: '60px' }}>{children}</main>
+              <main style={{ paddingTop: '60px' }}>
+                {children}
+                <SpeedInsights />
+              </main>
               <ToastContainer />
-              <Analytics/>
-              <SpeedInsights />
+              <Analytics />
             </DraftPostProvider>
           </ThemeProvider>
         </AuthProvider>
