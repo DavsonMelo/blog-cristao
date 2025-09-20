@@ -66,10 +66,8 @@ export default function RootLayout({
           <ThemeProvider>
             <DraftPostProvider>
               <Header />
-              <main style={{ paddingTop: '60px' }}>
-                {children}
-                <SpeedInsights />
-              </main>
+              <main style={{ paddingTop: '60px' }}>{children}</main>
+              <SpeedInsights />
               <ToastContainer />
               <Analytics />
             </DraftPostProvider>
