@@ -6,7 +6,7 @@ import { Poppins, Inter } from 'next/font/google'; // <-- Adicione estas importa
 import { DraftPostProvider } from './context/DraftPostContext';
 import { AuthProvider } from './context/AuthContext';
 import { Analytics } from '@vercel/analytics/next';
-import { SpeedInsights } from '@vercel/speed-insights/next';
+import { SpeedInsightsClient } from "./components/SpeedInsightsClient";
 
 import './globals.scss';
 import Header from './components/header';
@@ -67,7 +67,7 @@ export default function RootLayout({
             <DraftPostProvider>
               <Header />
               <main style={{ paddingTop: '60px' }}>{children}</main>
-              <SpeedInsights />
+              <SpeedInsightsClient />
               <ToastContainer />
               <Analytics />
             </DraftPostProvider>
